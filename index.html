@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RepairLog</title>
+<style>
+  :root{--bg:#f5f6f8;--card:#ffffff;--card2:#f1f4f8;--text:#1f2937;--muted:#6b7280;--accent:#4f46e5;--border:#e5e7eb;}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+  body{background:var(--bg);color:var(--text);min-height:100vh;}
+  header{background:var(--card);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  header h1{font-size:20px;display:flex;gap:4px 10px;align-items:center;flex-wrap:wrap;}
+  header small{color:var(--muted);font-weight:400;font-size:12px;flex-basis:100%;}
+  .rolebadge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--card2);border:1px solid var(--border);}
+  nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  nav button{background:transparent;color:var(--muted);border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;}
+  nav button.active{background:var(--accent);color:#fff;}
+  .container{max-width:1100px;margin:0 auto;padding:24px;}
+  .btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .btn.secondary{background:var(--card2);color:var(--text);border:1px solid var(--border);}
+  .btn.danger{background:#dc2626;}
+  .btn.small{padding:6px 12px;font-size:13px;}
+  .btn{transition:background .2s,color .2s,transform .15s;}
+  .btn.copied{background:#16a34a !important;color:#fff !important;border-color:#16a34a !important;transform:scale(1.04);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:20px;}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .stat .num{font-size:30px;font-weight:800;}
+  .stat .lbl{color:var(--muted);font-size:13px;margin-top:4px;}
+  .insight{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:24px;font-size:14px;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
+  .chartbox{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+  .chartbox h3{font-size:14px;margin-bottom:12px;color:var(--muted);}
+  .chartbox canvas{max-height:260px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .card h3{font-size:16px;}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;}
+  .pill{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+  .pill.proses{background:#fef3c7;color:#92400e;}
+  .pill.selesai{background:#d1fae5;color:#065f46;}
+  .pill.batal{background:#fee2e2;color:#991b1b;}
+  .pill.lunas{background:#d1fae5;color:#065f46;}
+  .pill.dp{background:#dbeafe;color:#1e40af;}
+  .pill.belum{background:#fef3c7;color:#92400e;}
+  .chip{display:inline-block;background:var(--card2);border:1px solid var(--border);padding:2px 8px;border-radius:6px;font-size:11px;margin:2px 2px 0 0;}
+  .muted{color:var(--muted);font-size:13px;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
+  input,select,textarea{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;font-size:14px;width:100%;}
+  textarea{min-height:80px;resize:vertical;}
+  input:disabled{opacity:.7;cursor:not-allowed;}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px;font-weight:600;}
+  .checks{display:flex;flex-wrap:wrap;gap:8px;}
+  .chk{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);padding:6px 10px;border-radius:8px;font-size:13px;width:auto;cursor:pointer;}
+  .chk input{width:auto;}
+  .ftbl{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;}
+  .ftbl td,.ftbl th{border:1px solid var(--border);padding:8px 10px;text-align:left;}
+  .ftbl th{background:var(--card2);}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-start;justify-content:center;padding:30px;z-index:100;overflow:auto;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:680px;width:100%;}
+  .modal h2{margin-bottom:8px;}
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px;}
+  .ba .box{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;}
+  .ba h4{margin-bottom:6px;font-size:14px;}
+  .thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .thumb{position:relative;width:78px;height:78px;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:#000;}
+  .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;}
+  .thumb .x{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:20px;height:20px;line-height:18px;text-align:center;cursor:pointer;font-size:13px;padding:0;}
+  .thumb .vtag{position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.65);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;}
+  .lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:200;}
+  .lb.open{display:flex;}
+  .lb #lbMedia img,.lb #lbMedia video{max-width:92vw;max-height:82vh;border-radius:8px;}
+  .lb .lbbtn{position:absolute;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .lb .nav{top:50%;transform:translateY(-50%);width:48px;height:48px;font-size:26px;}
+  .lb .prev{left:14px;}
+  .lb .next{right:14px;}
+  .lb .close{top:16px;right:16px;width:42px;height:42px;font-size:20px;}
+  .lb .count{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;background:rgba(0,0,0,.5);padding:4px 14px;border-radius:999px;}
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;}
+  .actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+  .warn{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;padding:14px 18px;border-radius:10px;margin:16px 24px;display:none;}
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
+  .photo-grid img{width:100%;border-radius:6px;border:1px solid var(--border);}
+  body.is-teknisi .ownerOnly{display:none !important;}
+  #publicView{display:none;max-width:760px;margin:0 auto;padding:24px;}
+  .pub-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;}
+  .pub-warranty{font-size:15px;padding:14px;border-radius:12px;text-align:center;margin:14px 0;line-height:1.5;}
+  .pub-warranty.ok{background:#d1fae5;color:#065f46;}
+  .pub-warranty.no{background:#fee2e2;color:#991b1b;}
+  #printArea{display:none;}
+  .auth-screen{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px;z-index:500;}
+  .auth-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:380px;width:100%;}
+  .auth-box h1{font-size:24px;display:flex;gap:8px;align-items:center;justify-content:center;}
+  .auth-err{color:#dc2626;font-size:13px;min-height:18px;margin:8px 0;}
+  .bio-circle{width:132px;height:132px;border-radius:50%;background:var(--card2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;margin:6px auto 10px;cursor:pointer;color:var(--accent);transition:transform .15s,background .15s;}
+  .bio-circle:hover{background:#eef2ff;transform:scale(1.04);}
+  .bio-circle:active{transform:scale(.97);}
+  .bio-circle svg{width:64px;height:64px;}
+  .linklike{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;text-decoration:underline;margin-top:14px;width:100%;padding:6px;}
+  .set-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+  .bootspin{width:44px;height:44px;border-radius:50%;border:4px solid var(--border);border-top-color:var(--accent);animation:bootspin 1s linear infinite;}
+  @keyframes bootspin{to{transform:rotate(360deg);}}
+  .tour-mask{position:fixed;inset:0;z-index:600;display:none;}
+  .tour-mask.open{display:block;}
+  .tour-spot{position:absolute;border-radius:10px;box-shadow:0 0 0 4px var(--accent),0 0 0 9999px rgba(0,0,0,.55);transition:all .25s ease;pointer-events:none;}
+  .tour-tip{position:absolute;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;width:280px;max-width:90vw;z-index:601;box-shadow:0 8px 28px rgba(0,0,0,.25);}
+  .tour-tip h4{margin-bottom:6px;font-size:15px;}
+  .tour-tip p{font-size:13px;color:var(--muted);line-height:1.5;}
+  .tour-actions{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px;}
+  .tour-step{font-size:12px;color:var(--muted);}
+  /* ===== KOLABORASI ===== */
+  .notifwrap{position:relative;}
+  .notif-dot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#ef4444;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .tech-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;}
+  .tech-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.85);}
+  .collab{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;}
+  .collab-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+  .ctab{background:var(--card2);border:1px solid var(--border);color:var(--muted);padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;}
+  .ctab.active{background:var(--accent);color:#fff;}
+  .act-item{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .act-ic{flex:none;}
+  .cmt-list{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+  .cmt{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;}
+  .cmt-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+  .cmt-del{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px;}
+  .cmt-body{font-size:14px;white-space:pre-wrap;word-break:break-word;}
+  .cmt-box{display:flex;gap:8px;align-items:flex-start;margin-top:6px;}
+  .cmt-box textarea,.cmt-box input{flex:1;}
+  .chk-line,.part-line{display:flex;align-items:center;gap:8px;padding:4px 0;}
+  .chk-line .chk,.part-line .chk{flex:1;width:auto;}
+  .board{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding-bottom:12px;scrollbar-width:none;-ms-overflow-style:none;align-items:flex-start;}
+  .board::-webkit-scrollbar{display:none;}
+  #tab-board{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:0 24px 8px;}
+  .bcol{flex:0 0 260px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px;min-height:120px;}
+  .bcol-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13px;padding-bottom:8px;margin-bottom:8px;border-bottom:2px solid var(--border);}
+  .bcount{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:1px 8px;font-size:11px;}
+  .bcol-body{display:flex;flex-direction:column;gap:8px;min-height:20px;}
+  .bcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+  .bcard:active{cursor:grabbing;}
+  .age-badge{font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;}
+  .age-ok{background:#d1fae5;color:#065f46;}
+  .age-warn{background:#fef3c7;color:#92400e;}
+  .age-danger{background:#fee2e2;color:#991b1b;}
+  .detail-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;}
+  .detail-side{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:14px;}
+  .detail-side h4{font-size:13px;margin-bottom:6px;}
+  .act-scroll{max-height:190px;overflow:auto;}
+  .bcol-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
+  .bcol-add{margin-top:8px;width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:7px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;}
+  .bcol-add:hover{background:var(--card);}
+  .bcol-addcol{flex:0 0 220px;display:flex;align-items:center;justify-content:center;background:transparent;border:2px dashed var(--border);color:var(--muted);cursor:pointer;font-weight:700;min-height:80px;border-radius:12px;}
+  .bcol-addcol:hover{background:var(--card2);}
+  @media print{
+    @page{margin:0;}
+    body{background:#fff;}
+    header,.container,.modal-bg,.lb,#publicView{display:none !important;}
+    #printArea{display:block !important;color:#000;padding:14mm 12mm;}
+    #printArea h1{font-size:18px;margin:6px 0;}
+    #printArea h3{font-size:14px;margin:10px 0 4px;}
+    .print-head{text-align:center;margin-bottom:4px;}
+    .print-head img{height:46px;width:46px;object-fit:contain;display:block;margin:0 auto 4px;}
+    .print-head .logo-emoji{font-size:34px;line-height:1;}
+    .print-sub{text-align:center;font-size:12px;color:#555;margin-bottom:12px;border-bottom:1px solid #000;padding-bottom:8px;}
+    .print-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;border-bottom:1px solid #000;padding-bottom:6px;}
+    .print-ba p{font-size:12px;color:#333;margin:2px 0 6px;}
+    .print-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}
+    .print-tbl td{border:1px solid #999;padding:5px 8px;}
+    .print-tbl td:nth-child(odd){background:#f0f0f0;font-weight:600;width:95px;}
+    .print-ba{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;}
+    .print-ba h4{font-size:13px;margin-bottom:4px;}
+    .print-ba .photo-grid{grid-template-columns:1fr !important;gap:6px;}
+    .print-ba .photo-grid img{max-height:60mm !important;width:auto !important;max-width:100% !important;object-fit:contain;border:1px solid #bbb;display:block;margin:0 auto 6px;}
+    .photo-grid img{border:1px solid #bbb;}
+    .print-foot{margin-top:14px;font-size:10px;color:#666;text-align:center;}
+    .receipt-note{font-size:12px;margin:12px 0;line-height:1.7;}
+    .receipt-sign{display:flex;justify-content:space-between;gap:30px;margin-top:30px;font-size:12px;text-align:center;}
+    .receipt-sign div{flex:1;}
+  }
+  @media(max-width:600px){
+    .container{padding:16px;}
+    header{flex-direction:column;align-items:stretch;gap:12px;}
+    header h1{font-size:18px;justify-content:center;}
+    header small{flex-basis:auto;}
+    nav{width:100%;flex-wrap:wrap;gap:8px;justify-content:center;}
+    nav button{flex:1 1 auto;padding:10px 8px;text-align:center;}
+    .ba,.charts,.frow,.frow3,.detail-grid{grid-template-columns:1fr;}
+    .stat-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+    .stat{padding:14px;}
+    .stat .num{font-size:24px;}
+    .modal{padding:18px;}
+    .board{gap:8px;}
+    .bcol{flex-basis:82vw;}
+  }
+</style>
+</head>
+<body>
+<div id="bootLoader" style="position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:600">
+  <div class="bootspin"></div>
+  <div class="muted">Memuat…</div>
+</div>
+<div class="auth-screen" id="authScreen" style="display:none">
+  <div class="auth-box" style="text-align:center">
+    <div class="bio-circle" id="bioCircle" onclick="bioTap()" title="Masuk dengan sidik jari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/>
+        <path d="M5 19.5C5.5 18 6 15 6 12c0-.7.12-1.37.34-2"/>
+        <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
+        <path d="M14 13.12c0 2.38 0 6.38-1 8.88"/>
+        <path d="M9 6.8a6 6 0 0 1 9 5.2c0 .47 0 1.17-.02 2"/>
+      </svg>
+    </div>
+    <p class="muted" id="authSub">Tap sidik jari untuk masuk</p>
+    <div class="auth-err" id="authError"></div>
+    <div id="pwForm" style="display:none;text-align:left">
+      <label>Email</label>
+      <input id="authEmail" type="email" placeholder="email@anda.com" autocomplete="username" />
+      <label>Password</label>
+      <input id="authPass" type="password" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <button class="btn" id="authBtn" onclick="doLogin()" style="width:100%;margin-top:14px">Masuk</button>
+    </div>
+    <button class="linklike" id="pwToggle" onclick="togglePwForm()">Masuk dengan email & password</button>
+    <button class="linklike" id="forgotBtn" onclick="forgotPw()" style="display:none;margin-top:4px">Lupa password?</button>
+  </div>
+</div>
+<header id="appHeader" style="display:none">
+  <h1 id="brandTitle">🛠️ RepairLog <small>Portofolio Teknisi Laptop</small></h1>
+  <nav>
+    <span class="rolebadge" id="roleBadge"></span>
+    <button id="navDash" class="active" onclick="showTab('dash')">Dashboard</button>
+    <button id="navList" onclick="showTab('list')">Laporan</button>
+    <button id="navBoard" onclick="showTab('board')">Papan</button>
+    <button id="navFinance" onclick="showTab('finance')" style="display:none">Keuangan</button>
+    <button class="btn small" onclick="openForm()">+ Tambah</button>
+    <button class="btn small secondary notifwrap" id="notifBtn" onclick="showTab('board')" title="Notifikasi komentar">🔔<span class="notif-dot" id="notifDot" style="display:none">0</span></button>
+    <button class="btn small secondary" id="settingsBtn" onclick="openSettings()" title="Pengaturan">⚙️</button>
+    <button class="btn small secondary" id="ownerBtn" onclick="openOwner()" title="Pengaturan Owner" style="display:none">🔒</button>
+    <button class="btn small secondary" onclick="startTour()" title="Panduan">❔</button>
+  </nav>
+</header>
+
+<div class="warn" id="configWarn">⚠️ Supabase belum dikonfigurasi. Isi SUPABASE_URL dan SUPABASE_ANON_KEY di config.js.</div>
+
+<div class="container" id="appMain" style="display:none">
+  <div id="tab-dash">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="insight" id="insight"></div>
+    <div id="warrantyAlert"></div>
+    <div class="charts" id="chartsWrap">
+      <div class="chartbox"><h3>📊 Pengerjaan 14 Hari Terakhir</h3><canvas id="chartDay"></canvas></div>
+      <div class="chartbox"><h3>🍩 Distribusi per Level</h3><canvas id="chartLevel"></canvas></div>
+      <div class="chartbox"><h3>📈 Komponen Paling Sering</h3><canvas id="chartComp"></canvas></div>
+      <div class="chartbox"><h3>💻 Merek Paling Sering</h3><canvas id="chartBrand"></canvas></div>
+    </div>
+    <div id="techPerf"></div>
+    <div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px"><h2 style="margin:0">📌 Pekerjaan Terbaru</h2><div id="recentRange" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+    <div class="grid" id="recentGrid"></div>
+  </div>
+
+  <div id="tab-list" style="display:none">
+    <div class="toolbar">
+      <input id="search" placeholder="Cari device / customer / tiket..." oninput="render()" style="max-width:240px" />
+      <select id="filterLevel" onchange="render()" style="max-width:160px">
+        <option value="">Semua Level</option>
+        <option value="1">Level 1</option><option value="2">Level 2</option>
+        <option value="3">Level 3</option><option value="4">Level 4</option>
+      </select>
+      <select id="filterStatus" onchange="render()" style="max-width:160px">
+        <option value="">Semua Status</option>
+        <option value="Proses">Proses</option>
+        <option value="Selesai">Selesai</option>
+        <option value="Batal">Batal / Gagal</option>
+      </select>
+      <select id="filterBrand" onchange="render()" style="max-width:160px"><option value="">Semua Merek</option></select>
+      <button class="btn" onclick="openForm()">+ Tambah Laporan</button>
+    </div>
+    <div class="grid" id="listGrid"></div>
+  </div>
+
+  <div id="tab-board" style="display:none">
+    <div class="row" style="margin-bottom:12px"><h2 style="margin:0">🗂️ Papan Pengerjaan</h2><span class="muted">Seret kartu untuk pindah tahap • Owner bisa tambah/hapus kolom</span></div>
+    <div class="board" id="boardWrap"></div>
+  </div>
+
+  <div id="tab-finance" style="display:none">
+    <div class="row" style="margin-bottom:6px"><h2 style="margin:0">📊 Laporan Keuangan</h2><button class="btn small secondary" onclick="exportCsv()">⬇️ Export CSV (Excel)</button></div>
+    <p class="muted" style="margin-bottom:14px">Rekap berdasarkan bulan tanggal masuk. Hanya Owner yang bisa melihat halaman ini.</p>
+    <div id="financeBox"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="formModal">
+  <div class="modal">
+    <h2 id="formTitle">Tambah Laporan</h2>
+    <input type="hidden" id="f_id" />
+    <label>Nama Device / Laptop *</label>
+    <input id="f_device" placeholder="cth: Asus X441 / Acer Aspire 5" />
+    <div class="frow">
+      <div><label>Merek</label><select id="f_brand"></select></div>
+      <div><label>Customer</label><input id="f_customer" placeholder="Nama pemilik" /></div>
+    </div>
+    <div id="phoneWrap"><label>No. WhatsApp Customer</label><input id="f_phone" placeholder="cth: 0812xxxx" /></div>
+    <div class="frow">
+      <div><label>Biaya Jasa (Rp)</label><input id="f_fee" type="number" min="0" placeholder="0" oninput="recomputeCost()" /></div>
+      <div><label>Status Pembayaran</label>
+        <select id="f_payment"><option>Belum</option><option>DP</option><option>Lunas</option></select></div>
+    </div>
+    <div class="ownerOnly">
+      <label>Rincian Modal / HPP</label>
+      <div id="costItems"></div>
+      <button type="button" class="btn small secondary" onclick="addCostItem()" style="margin-top:6px">+ Tambah baris modal</button>
+      <div class="row" style="margin-top:12px;font-weight:700"><span>Total Modal / HPP</span><span id="costTotal">Rp0</span></div>
+      <div class="row" style="font-weight:700;color:var(--accent)"><span>Perkiraan Laba (Biaya − Modal)</span><span id="labaPreview">Rp0</span></div>
+    </div>
+    <div class="frow">
+      <div><label>Level Pekerjaan</label>
+        <select id="f_level">
+          <option value="1">Level 1 - Ringan (software: install ulang OS, driver, aplikasi)</option>
+          <option value="2">Level 2 - Sedang (bongkar &amp; ganti part: LCD, keyboard, RAM/SSD, cleaning, repasta/thermal)</option>
+          <option value="3">Level 3 - Berat (engsel, port/konektor, jack charging, flexible)</option>
+          <option value="4">Level 4 - Sangat Berat (microsoldering: ganti IC, jumper, BGA)</option>
+        </select></div>
+      <div><label>Status</label>
+        <select id="f_status"><option>Proses</option><option>Selesai</option><option value="Batal">Batal / Gagal</option></select></div>
+    </div>
+    <div class="frow3">
+      <div><label>Tanggal Masuk (terkunci)</label><input id="f_datein" type="date" disabled /></div>
+      <div><label>Tanggal Pengambilan</label><input id="f_dateout" type="date" /></div>
+      <div><label>Lama Garansi</label>
+        <select id="f_warranty">
+          <option value="0">Tanpa garansi</option>
+          <option value="7">7 hari</option><option value="14">14 hari</option>
+          <option value="30">30 hari</option><option value="60">60 hari</option><option value="90">90 hari</option>
+        </select></div>
+    </div>
+    <div class="muted" id="ticketHint" style="font-size:12px;margin-top:8px">No. Tiket dibuat otomatis saat disimpan.</div>
+    <label>Teknisi yang mengerjakan</label>
+    <select id="f_assigned"></select>
+    <label>Komponen / Bagian yang diperbaiki</label>
+    <div class="checks" id="compChecks"></div>
+    <label>Pekerjaan yang dilakukan</label>
+    <textarea id="f_tasks" placeholder="cth: bongkar, bersihkan kipas, ganti thermal paste..."></textarea>
+
+    <div class="ba">
+      <div class="box">
+        <h4>🔧 BEFORE (sebelum perbaikan)</h4>
+        <label>Catatan kondisi awal</label>
+        <textarea id="f_beforeNotes" placeholder="cth: panas berlebih, kipas berisik..."></textarea>
+        <label>Foto / Video Before (bisa lebih dari 1)</label>
+        <input type="file" accept="image/*,video/*" multiple onchange="pickFiles(this,'before')" />
+        <div class="thumbs" id="thumbs_before"></div>
+      </div>
+      <div class="box">
+        <h4>✅ AFTER (sesudah perbaikan)</h4>
+        <label>Catatan hasil</label>
+        <textarea id="f_afterNotes" placeholder="cth: suhu normal, kipas senyap..."></textarea>
+        <label>Foto / Video After (bisa lebih dari 1)</label>
+        <input type="file" accept="image/*,video/*" multiple onchange="pickFiles(this,'after')" />
+        <div class="thumbs" id="thumbs_after"></div>
+      </div>
+    </div>
+
+    <div id="editActWrap" style="display:none;margin-top:8px"><label>📋 Aktivitas &amp; Log</label><div id="editActLog"></div><label>💬 Komentar</label><div id="sideCmt"></div></div>
+    <div class="actions" style="margin-top:18px">
+      <button class="btn danger ownerOnly" id="delBtn" onclick="delFromForm()" style="display:none">🗑️ Hapus</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn secondary" onclick="requestCloseModal('formModal')">Batal</button>
+        <button class="btn" id="saveBtn" onclick="saveReport()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="detailModal">
+  <div class="modal" id="detailContent"></div>
+</div>
+
+<div class="modal-bg" id="settingsModal">
+  <div class="modal" style="max-width:460px">
+    <h2>⚙️ Pengaturan</h2>
+    <div style="padding:14px 0;border-bottom:1px solid var(--border)"><div style="font-weight:600;margin-bottom:6px">👤 Nama tampilan</div><div class="row" style="gap:8px"><input id="setName" placeholder="Nama kamu" style="flex:1" /><button class="btn small" onclick="saveMyName()">Simpan</button></div><div class="muted" style="font-size:12px;margin-top:6px">Nama ini muncul di komentar, aktivitas, &amp; papan — bukan dari email.</div></div>
+    <div class="set-row" id="bioSetRow">
+      <div>
+        <div style="font-weight:600">Login sidik jari</div>
+        <div class="muted" id="bioStatus">Masuk cukup dengan biometrik di perangkat ini.</div>
+      </div>
+      <button class="btn small" id="bioToggleBtn" onclick="toggleBiometric()">Aktifkan</button>
+    </div>
+    <div class="set-row ownerOnly" id="ownerSetRow">
+      <div>
+        <div style="font-weight:600">🔒 Pengaturan Owner</div>
+        <div class="muted">Branding toko, fitur aktif, kelola pengguna, export data & PIN owner.</div>
+      </div>
+      <button class="btn small" onclick="openOwner()">Buka</button>
+    </div>
+    <div class="set-row">
+      <div>
+        <div style="font-weight:600">Logout</div>
+        <div class="muted">Keluar dari akun di perangkat ini.</div>
+      </div>
+      <button class="btn danger small" onclick="doLogout()">Logout</button>
+    </div>
+    <div class="actions" style="justify-content:flex-end;margin-top:18px">
+      <button class="btn secondary small" onclick="closeSettings()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="ownerModal">
+  <div class="modal" style="max-width:520px">
+    <h2>🔒 Pengaturan Owner</h2>
+    <div id="ownerLock">
+      <p class="muted" id="ownerLockMsg">Masukkan PIN owner.</p>
+      <label>PIN Owner</label>
+      <input id="ownerPin" type="password" inputmode="numeric" placeholder="PIN" onkeydown="if(event.key==='Enter')unlockOwner()" />
+      <div class="auth-err" id="ownerErr"></div>
+      <div class="actions" style="justify-content:flex-end;margin-top:12px">
+        <button class="btn secondary small" onclick="closeOwner()">Tutup</button>
+        <button class="btn small" id="ownerUnlockBtn" onclick="unlockOwner()">Buka</button>
+      </div>
+    </div>
+    <div id="ownerPanel" style="display:none">
+      <div style="font-weight:600;margin-bottom:4px">🏷️ Branding Toko</div>
+      <label>Nama toko</label>
+      <input id="brName" placeholder="cth: Service Laptop Jaya" />
+      <label>Tagline</label>
+      <input id="brTagline" placeholder="cth: Spesialis Servis Laptop" />
+      <div class="frow">
+        <div><label>Logo (emoji)</label><input id="brLogo" maxlength="4" placeholder="emoji" /></div>
+        <div><label>Warna aksen</label><input id="brColor" type="color" style="height:42px;padding:4px" /></div>
+      </div>
+      <label>Logo PNG (opsional — untuk logo custom toko)</label>
+      <div class="row" style="gap:10px;align-items:center">
+        <div id="brLogoPreview" style="width:44px;height:44px;flex:none;border-radius:8px;border:1px solid var(--border);background:var(--card2);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:22px"></div>
+        <input type="file" id="brLogoFile" accept="image/png,image/jpeg,image/webp" onchange="uploadLogo(this)" style="flex:1" />
+        <button class="btn small secondary" type="button" onclick="clearLogo()">Hapus</button>
+      </div>
+      <div class="muted" id="brLogoStatus" style="font-size:11px;margin-top:4px">Jika diisi, logo PNG dipakai menggantikan emoji.</div>
+      <div><label>Prefix No. Tiket</label><input id="brPrefixCo" placeholder="SVC" /></div>
+      <button class="btn small" onclick="saveBrandFromForm()" style="margin-top:12px">💾 Simpan Branding</button>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
+      <div style="font-weight:600;margin-bottom:6px">🧩 Fitur Aktif</div>
+      <div class="checks" id="featChecks"></div>
+      <button class="btn small" onclick="saveFeatures()" style="margin-top:12px">💾 Simpan Fitur</button>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
+      <div style="font-weight:600;margin-bottom:4px">👥 Kelola Pengguna</div>
+      <div class="muted" style="font-size:12px">Untuk menambah atau mengurangi pengguna, hubungi admin.<span id="supportContact"></span></div>
+      <div id="userList" style="margin-top:10px">Memuat...</div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
+      <div style="font-weight:600;margin-bottom:4px">🔑 Ubah PIN Owner</div>
+      <div class="frow">
+        <div><label>PIN baru</label><input id="newPin" type="password" inputmode="numeric" placeholder="min 4 digit" /></div>
+        <div><label>Ulangi PIN</label><input id="newPin2" type="password" inputmode="numeric" placeholder="ulangi PIN" /></div>
+      </div>
+      <button class="btn small secondary" onclick="changePin()" style="margin-top:10px">Simpan PIN</button>
+      <div class="actions" style="justify-content:flex-end;margin-top:18px">
+        <button class="btn secondary small" onclick="closeOwner()">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="wizardModal">
+  <div class="modal" style="max-width:460px">
+    <h2>👋 Selamat datang!</h2>
+    <p class="muted" style="margin-bottom:6px">Atur identitas toko dulu (bisa diubah lagi nanti di menu 🔒).</p>
+    <label>Nama toko</label>
+    <input id="wzName" placeholder="cth: Service Laptop Jaya" />
+    <div class="frow">
+      <div><label>Logo (emoji)</label><input id="wzLogo" maxlength="4" placeholder="🛠️" /></div>
+      <div><label>Warna aksen</label><input id="wzColor" type="color" value="#4f46e5" style="height:42px;padding:4px" /></div>
+    </div>
+    <div class="actions" style="justify-content:flex-end;margin-top:16px">
+      <button class="btn secondary small" onclick="closeWizard()">Nanti saja</button>
+      <button class="btn small" onclick="saveWizard()">Simpan & Mulai</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="miniModal" style="z-index:150"><div class="modal" style="max-width:360px"><h2 id="miniTitle" style="font-size:18px"></h2><p class="muted" id="miniMsg" style="margin:10px 0 4px;font-size:14px;line-height:1.5"></p><div class="actions" id="miniActions" style="justify-content:flex-end;margin-top:20px"></div></div></div>
+
+<div id="publicView"></div>
+
+<div class="lb" id="lightbox" onclick="if(event.target.id==='lightbox')closeLb()">
+  <button class="lbbtn close" onclick="closeLb()">×</button>
+  <button class="lbbtn nav prev" onclick="lbNav(-1)">‹</button>
+  <div id="lbMedia"></div>
+  <button class="lbbtn nav next" onclick="lbNav(1)">›</button>
+  <div class="count" id="lbCount"></div>
+</div>
+
+<div class="tour-mask" id="tourOverlay">
+<div class="tour-spot" id="tourSpot"></div>
+<div class="tour-tip" id="tourTip">
+<h4 id="tourTitle"></h4>
+<p id="tourText"></p>
+<div class="tour-actions"><span class="tour-step" id="tourStep"></span><div style="display:flex;gap:6px"><button class="btn small secondary" onclick="endTour()">Lewati</button><button class="btn small" id="tourNext" onclick="nextTour()">Lanjut →</button></div></div>
+</div>
+</div>
+<div id="printArea"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="config.js"></script>
+<script>
+// ====== KONFIGURASI: semua nilai diisi di file config.js (index.html TIDAK perlu diubah per toko) ======
+const CFG = (typeof window!=='undefined' && window.APP_CONFIG) ? window.APP_CONFIG : {};
+const SUPABASE_URL  = CFG.SUPABASE_URL || 'MASUKKAN_PROJECT_URL';
+const SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || 'MASUKKAN_ANON_KEY';
+const STORE_ID = CFG.STORE_ID || '';
+const OWNER_EMAIL = CFG.OWNER_EMAIL || '';
+const SUPPORT_CONTACT = CFG.SUPPORT_CONTACT || '';
+const MASTER_URL = CFG.MASTER_URL || '';
+const MASTER_KEY = CFG.MASTER_KEY || '';
+let LICENSE_FEATURES = null;
+let LICENSE_STORAGE_MB = null;
+
+let db=null;
+try{
+  if(SUPABASE_URL && !SUPABASE_URL.startsWith('MASUKKAN') && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('MASUKKAN')){
+    // storageKey unik per toko → sesi login tiap toko TERPISAH di browser (tidak saling menimpa walau 1 project & 1 origin)
+    db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storageKey: 'rl-auth-'+(STORE_ID||'default'), persistSession:true, autoRefreshToken:true } });
+  }
+}catch(e){}
+if(!db){ document.getElementById('configWarn').style.display='block'; }
+if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') setNewPassword(); }); }
+
+// ====== KONSTANTA ======
+const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
+const COMPONENTS=['Kipas/Cooling','Thermal Paste','RAM','SSD/HDD','Baterai','Keyboard','LCD/Layar','Motherboard','Charger/Adaptor','Engsel','Casing','Speaker','Sistem Operasi','Lainnya'];
+const LEVELS={1:{name:'Ringan',color:'#22c55e'},2:{name:'Sedang',color:'#3b82f6'},3:{name:'Berat',color:'#f59e0b'},4:{name:'Sangat Berat',color:'#ef4444'}};
+const IMG_MAX_DIM=1600, IMG_QUALITY=0.7, VIDEO_MAX_MB=50;
+
+const BRAND_DEFAULT={name:'RepairLog',tagline:'Portofolio Teknisi Laptop',logo:'🛠️',logoUrl:'',color:'#6366f1',ticketCompany:'RL',ticketSide:'SVC'};
+let BRAND={...BRAND_DEFAULT};
+// versi jual: semua fitur Pro aktif secara default (dikunci Pro)
+const FEATURES_DEFAULT={dashboard:true,charts:true,publicLink:true,print:true,biometric:true,profit:true,whatsapp:true,collab:true};
+let FEATURES={...FEATURES_DEFAULT};
+const FEAT_LABELS={dashboard:'Dashboard & statistik',charts:'Grafik',publicLink:'Link garansi publik',print:'Cetak / PDF',biometric:'Login sidik jari',profit:'Modal & Laba',whatsapp:'No. WhatsApp customer',collab:'Kolaborasi (Papan, komentar, notifikasi)'};
+
+let ME={role:'teknisi',name:'',email:'',user_id:null,store_id:null};
+const isOwner=()=>ME.role==='owner';
+
+let reports=[];
+let formMedia={before:[],after:[]};
+let detailMedia={before:[],after:[]};
+let lbList=[], lbIndex=0;
+
+// ====== KOLABORASI (state) ======
+const STAGES=['Antri','Dikerjakan','Menunggu Part','Selesai','Diambil'];
+const STAGE_COLOR={'Antri':'#6b7280','Dikerjakan':'#3b82f6','Menunggu Part':'#f59e0b','Selesai':'#22c55e','Diambil':'#8b5cf6'};
+let BOARD_STAGES=null; let _newStage=null;
+function boardStages(){ return (Array.isArray(BOARD_STAGES)&&BOARD_STAGES.length)?BOARD_STAGES:STAGES; }
+function stageColor(s){ if(STAGE_COLOR[s]) return STAGE_COLOR[s]; const arr=boardStages(); const i=arr.indexOf(s); return TECH_COLORS[i%TECH_COLORS.length]; }
+const TECH_COLORS=['#6366f1','#22c55e','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#8b5cf6'];
+let TEAM=[]; let unreadMap={}; let cmtChannel=null; let _openReportId=null; let _collabTab='akt'; let _dragId=null;
+
+// ====== HELPER ======
+const $=id=>document.getElementById(id);
+const rp=n=>'Rp'+(Number(n)||0).toLocaleString('id-ID');
+const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=d=>d?new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'-';
+
+// ====== BRANDING ======
+function brandLogoImg(px){ return BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" alt="logo" style="height:${px}px;width:${px}px;object-fit:contain;border-radius:6px;vertical-align:middle" />`:''; }
+function applyBrand(){
+  document.documentElement.style.setProperty('--accent',BRAND.color||'#6366f1');
+  document.title=BRAND.name||'RepairLog';
+  const lg=BRAND.logoUrl?brandLogoImg(28):esc(BRAND.logo||'🛠️');
+  $('brandTitle').innerHTML=`${lg} ${esc(BRAND.name||'RepairLog')} <small>${esc(BRAND.tagline||'')}</small>`;
+}
+async function saveBrand(obj){
+  BRAND={...BRAND,...obj}; applyBrand();
+  if(db){ await db.from('app_settings').upsert({store_id:STORE_ID,key:'branding',value:BRAND,updated_at:new Date().toISOString()},{onConflict:'store_id,key'}); }
+}
+async function saveBrandFromForm(){
+  const obj={name:$('brName').value.trim()||'RepairLog',tagline:$('brTagline').value.trim(),logo:$('brLogo').value.trim()||'🛠️',color:$('brColor').value||'#6366f1',ticketCompany:($('brPrefixCo').value.trim()||'SVC').toUpperCase()};
+  await saveBrand(obj);
+  toast('Branding tersimpan.','success');
+}
+async function uploadLogo(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  if(!db){ toast('Supabase belum dikonfigurasi.','error'); return; }
+  $('brLogoStatus').textContent='Mengunggah logo...';
+  try{
+    const ext=(f.name.split('.').pop()||'png').toLowerCase();
+    const path=STORE_ID+'/logo-'+Date.now()+'.'+ext;
+    const {error}=await db.storage.from('media').upload(path,f,{contentType:f.type,upsert:true});
+    if(error) throw error;
+    const {data}=db.storage.from('media').getPublicUrl(path);
+    await saveBrand({logoUrl:data.publicUrl});
+    const pv=$('brLogoPreview'); if(pv) pv.innerHTML=`<img src="${esc(data.publicUrl)}" style="width:100%;height:100%;object-fit:contain" />`;
+    $('brLogoStatus').textContent='Logo terpasang ✓ (tersinkron ke semua perangkat).';
+  }catch(e){ $('brLogoStatus').textContent='Gagal upload logo: '+(e.message||e); }
+}
+async function clearLogo(){
+  await saveBrand({logoUrl:''});
+  const pv=$('brLogoPreview'); if(pv) pv.innerHTML=esc(BRAND.logo||'🛠️');
+  $('brLogoStatus').textContent='Logo PNG dihapus — kembali pakai emoji.';
+}
+
+// ====== FITUR (feature flags) ======
+async function fetchConfig(){
+  if(!db) return;
+  const {data}=await db.from('app_settings').select('key,value').eq('store_id',STORE_ID).in('key',['branding','features','board_stages']);
+  if(data){ data.forEach(r=>{ if(r.key==='branding'&&r.value) BRAND={...BRAND_DEFAULT,...r.value}; if(r.key==='features'&&r.value) FEATURES={...FEATURES_DEFAULT,...r.value}; if(r.key==='board_stages'&&Array.isArray(r.value)&&r.value.length) BOARD_STAGES=r.value; }); }
+  if(LICENSE_FEATURES){ Object.keys(FEATURES).forEach(k=>{ if(LICENSE_FEATURES[k]===false) FEATURES[k]=false; }); }
+  applyBrand(); applyFeatures();
+}
+function featAllowed(k){ return !LICENSE_FEATURES || LICENSE_FEATURES[k]!==false; }
+async function checkStorageWarn(){ try{ if(LICENSE_STORAGE_MB==null||!db) return; const {data}=await db.rpc('my_storage_usage'); const used=Number(data)||0; const limit=LICENSE_STORAGE_MB*1048576; if(limit>0 && used>limit) toast('Storage toko melebihi jatah ('+Math.round(used/1048576)+'/'+LICENSE_STORAGE_MB+' MB). Hubungi admin untuk menambah kapasitas.','error'); }catch(e){} }
+function applyFeatures(){
+  $('navDash').style.display=FEATURES.dashboard?'':'none';
+  $('chartsWrap').style.display=(FEATURES.dashboard&&FEATURES.charts)?'':'none';
+  $('phoneWrap').style.display=FEATURES.whatsapp?'':'none';
+  $('bioSetRow').style.display=FEATURES.biometric?'':'none';
+  if($('navBoard')) $('navBoard').style.display=FEATURES.collab?'':'none';
+  if($('notifBtn')) $('notifBtn').style.display=FEATURES.collab?'':'none';
+  applyRole();
+}
+
+// ====== ROLE ======
+function applyRole(){
+  const owner=isOwner();
+  document.body.classList.toggle('is-teknisi',!owner);
+  $('ownerBtn').style.display='none';
+  $('navFinance').style.display=(owner&&FEATURES.profit)?'':'none';
+  $('roleBadge').textContent=owner?'👑 Owner':'🔧 Teknisi';
+}
+async function fetchMe(){
+  if(!db) return;
+  const {data:{user}}=await db.auth.getUser();
+  if(!user) return;
+  ME.user_id=user.id; ME.email=user.email||'';
+  const {data,error}=await db.rpc('ensure_profile',{p_store_id:STORE_ID, p_owner_email:OWNER_EMAIL});
+  const prof=Array.isArray(data)?data[0]:data;
+  if(!error && prof){ ME.role=prof.role||'teknisi'; ME.name=prof.name||''; ME.store_id=prof.store_id||null; }
+  else if(error && String(error.message||'').indexOf('WRONG_STORE')>=0){ ME.role='teknisi'; ME.name=''; ME.store_id='__WRONG_STORE__'; } // akun milik toko lain → dipaksa mismatch supaya guardStore menolak
+  else{ ME.role='teknisi'; ME.name=(user.email||'').split('@')[0]; ME.store_id=null; }
+}
+// ====== KUNCI TOKO (isolasi antar-toko pada 1 project Supabase bersama) ======
+// Tiap akun terikat ke SATU toko (profiles.store_id). Kalau akun dipakai di toko lain, login ditolak.
+async function guardStore(){
+  if(ME.store_id && STORE_ID && ME.store_id!==STORE_ID){
+    try{ if(ME.user_id) await db.from('active_session').delete().eq('user_id',ME.user_id); }catch(e){}
+    try{ await db.auth.signOut(); }catch(e){}
+    ME={role:'teknisi',name:'',email:'',user_id:null,store_id:null};
+    return false;
+  }
+  return true;
+}
+
+// ====== DROPDOWN & TIKET ======
+function buildCompChecks(){
+  $('compChecks').innerHTML=COMPONENTS.map(c=>`<label class="chk"><input type="checkbox" value="${esc(c)}" onchange="onCompToggle()"> ${esc(c)}</label>`).join('');
+}
+function buildBrandOptions(){
+  $('f_brand').innerHTML=BRANDS.map(b=>`<option>${esc(b)}</option>`).join('');
+}
+function buildAssignOptions(sel){ const el=$('f_assigned'); if(!el) return; el.innerHTML='<option value="">— Belum di-assign —</option>'+TEAM.map(t=>`<option value="${t.user_id}"${sel===t.user_id?' selected':''}>${esc(t.name||t.email)}</option>`).join(''); }
+function getSelectedComps(){ return [...document.querySelectorAll('#compChecks input:checked')].map(i=>i.value); }
+function setComps(arr){ document.querySelectorAll('#compChecks input').forEach(i=>{i.checked=(arr||[]).includes(i.value);}); }
+function genTicket(){
+  const p=(BRAND.ticketCompany||'SVC');
+  const d=new Date(); const ymd=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  const rnd=Math.floor(Math.random()*900+100);
+  return `${p}-${ymd}-${rnd}`;
+}
+
+// ====== DATA ======
+async function loadAll(){
+  if(!db) return;
+  const {data,error}=await db.from('reports_view').select('*').order('created_at',{ascending:false});
+  if(!error&&data){ reports=data; }
+  render();
+}
+function refresh(){ loadAll(); }
+function showTab(t){
+  $('tab-dash').style.display=t==='dash'?'':'none';
+  $('tab-list').style.display=t==='list'?'':'none';
+  $('tab-board').style.display=t==='board'?'':'none';
+  $('tab-finance').style.display=t==='finance'?'':'none';
+  $('navDash').classList.toggle('active',t==='dash');
+  $('navList').classList.toggle('active',t==='list');
+  $('navBoard').classList.toggle('active',t==='board');
+  $('navFinance').classList.toggle('active',t==='finance');
+  if(t==='dash') renderDash();
+  if(t==='board') renderBoard();
+  if(t==='finance') renderFinance();
+}
+
+// ====== MEDIA ======
+function pickFiles(input,side){ handleFiles([...input.files],side); input.value=''; }
+async function handleFiles(files,side){
+  for(const f of files){
+    if(f.type.startsWith('video/')){
+      if(f.size>VIDEO_MAX_MB*1024*1024){ toast(`Video "${f.name}" > ${VIDEO_MAX_MB}MB, dilewati.`,'error'); continue; }
+      const b64=await fileToB64(f); formMedia[side].push({type:'video',data:b64,name:f.name});
+    }else if(f.type.startsWith('image/')){
+      const b64=await compressImage(f); formMedia[side].push({type:'image',data:b64,name:f.name});
+    }
+  }
+  renderThumbs(side);
+}
+function fileToB64(f){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);}); }
+function compressImage(f){
+  return new Promise((res,rej)=>{
+    const img=new Image(); const url=URL.createObjectURL(f);
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w>h&&w>IMG_MAX_DIM){h=h*IMG_MAX_DIM/w;w=IMG_MAX_DIM;}
+      else if(h>=w&&h>IMG_MAX_DIM){w=w*IMG_MAX_DIM/h;h=IMG_MAX_DIM;}
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg',IMG_QUALITY));
+    };
+    img.onerror=rej; img.src=url;
+  });
+}
+function renderThumbs(side){
+  const wrap=$('thumbs_'+side);
+  wrap.innerHTML=formMedia[side].map((m,i)=>{
+    const src=m.url||m.data;
+    const inner=m.type==='video'?`<video src="${src}"></video><span class="vtag">VIDEO</span>`:`<img src="${src}" />`;
+    return `<div class="thumb" onclick="previewForm('${side}',${i})">${inner}<button class="x" onclick="event.stopPropagation();removeMedia('${side}',${i})">×</button></div>`;
+  }).join('');
+}
+function removeMedia(side,i){ formMedia[side].splice(i,1); renderThumbs(side); }
+function previewForm(side,i){ openLightbox(formMedia[side],i); }
+async function uploadMedia(m){
+  if(m.url) return m;
+  if(!db) return {type:m.type,url:m.data};
+  try{
+    const blob=await (await fetch(m.data)).blob();
+    const ext=m.type==='video'?'mp4':'jpg';
+    const path=`${STORE_ID}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const {error}=await db.storage.from('media').upload(path,blob,{contentType:blob.type||(m.type==='video'?'video/mp4':'image/jpeg')});
+    if(error) throw error;
+    const {data}=db.storage.from('media').getPublicUrl(path);
+    return {type:m.type,url:data.publicUrl};
+  }catch(e){ console.error(e); return {type:m.type,url:m.data}; }
+}
+async function uploadList(arr){ const out=[]; for(const m of arr){ out.push(await uploadMedia(m)); } return out; }
+
+// ====== FORM ======
+function openForm(id){
+  buildBrandOptions(); buildCompChecks();
+  formMedia={before:[],after:[]}; _newStage=null;
+  const r=id?reports.find(x=>x.id===id):null;
+  $('formTitle').textContent=r?'Edit Laporan':'Tambah Laporan';
+  $('f_id').value=r?r.id:'';
+  $('f_device').value=r?r.device||'':'';
+  $('f_customer').value=r?r.customer||'':'';
+  $('f_phone').value=r?r.customer_phone||'':'';
+  $('f_fee').value=r?r.fee||0:'';
+  $('f_payment').value=r?r.payment_status||'Belum':'Belum';
+  $('f_level').value=r?r.level||1:1;
+  $('f_status').value=r?r.status||'Proses':'Proses';
+  $('f_datein').value=r?(r.date_in||'').slice(0,10):new Date().toISOString().slice(0,10);
+  $('f_dateout').value=r?(r.date_out||'').slice(0,10):'';
+  $('f_warranty').value=r?r.warranty_days||30:30;
+  $('f_brand').value=r?r.brand||'Asus':'Asus';
+  $('f_tasks').value=r?r.tasks||'':'';
+  $('f_beforeNotes').value=r?r.before_notes||'':'';
+  $('f_afterNotes').value=r?r.after_notes||'':'';
+  setComps(r?r.components:[]); buildAssignOptions(r?r.assigned_to:null);
+  costItemsState=(r&&Array.isArray(r.cost_items)&&r.cost_items.length)?r.cost_items.map(x=>({label:x.label||'',amount:Number(x.amount)||0,auto:!!x.auto})):[];
+  syncCostItemsFromComps(); renderCostItems();
+  formMedia.before=r?(r.before_media||[]).map(x=>({...x})):[];
+  formMedia.after=r?(r.after_media||[]).map(x=>({...x})):[];
+  renderThumbs('before'); renderThumbs('after');
+  $('delBtn').style.display=(r&&isOwner())?'':'none';
+  const _eaw=$('editActWrap'); if(_eaw){ if(id&&FEATURES.collab){ _eaw.style.display='block'; _openReportId=id; renderActivity(id); renderComments(id); markRead(id); } else { _eaw.style.display='none'; _openReportId=null; if($('editActLog')) $('editActLog').innerHTML=''; if($('sideCmt')) $('sideCmt').innerHTML=''; } }
+  formDirty=false;
+  openModal('formModal');
+}
+function closeForm(){ _openReportId=null; closeModal('formModal'); }
+async function saveReport(){
+  const device=$('f_device').value.trim();
+  if(!device){ toast('Nama device wajib diisi.','error'); return; }
+  $('saveBtn').disabled=true; $('saveBtn').textContent='Menyimpan...';
+  try{
+    const before=await uploadList(formMedia.before);
+    const after=await uploadList(formMedia.after);
+    const id=$('f_id').value;
+    const payload={
+      store_id:STORE_ID,
+      device, brand:$('f_brand').value, customer:$('f_customer').value.trim(),
+      customer_phone:$('f_phone').value.trim(),
+      fee:Number($('f_fee').value)||0, payment_status:$('f_payment').value,
+      level:Number($('f_level').value)||1, status:$('f_status').value,
+      tasks:$('f_tasks').value.trim(), components:getSelectedComps(), assigned_to:$('f_assigned').value||null,
+      before_notes:$('f_beforeNotes').value.trim(), after_notes:$('f_afterNotes').value.trim(),
+      before_media:before, after_media:after,
+      date_out:$('f_dateout').value||null, warranty_days:Number($('f_warranty').value)||0,
+      updated_at:new Date().toISOString()
+    };
+    // checklist & part dihapus sesuai permintaan
+    if(isOwner()){ payload.cost=recomputeCost(); payload.cost_items=costItemsState.map(it=>({label:it.label,amount:Number(it.amount)||0,auto:!!it.auto})); }
+    let newTicket=null;
+    if(id){
+      await db.from('reports').update(payload).eq('id',id);
+    }else{
+      payload.date_in=$('f_datein').value||new Date().toISOString().slice(0,10);
+      payload.ticket_no=genTicket();
+      payload.stage=_newStage||boardStages()[0]||'Antri';
+      newTicket=payload.ticket_no;
+      await db.from('reports').insert(payload);
+    }
+    closeForm(); await loadAll();
+    checkStorageWarn();
+    if(newTicket){ const nr=reports.find(x=>x.ticket_no===newTicket); if(nr && FEATURES.print){ showMini('Laporan tersimpan ✅','Cetak Tanda Terima Servis untuk customer sekarang?',[{label:'Nanti',cls:'secondary',fn:null},{label:'🧾 Cetak',fn:()=>doReceipt(nr.id)}]); } }
+  }catch(e){ toast('Gagal menyimpan: '+(e.message||e),'error'); }
+  finally{ $('saveBtn').disabled=false; $('saveBtn').textContent='Simpan'; }
+}
+async function delFromForm(){
+  if(!isOwner()){ toast('Hanya Owner yang bisa menghapus.','error'); return; }
+  const id=$('f_id').value; if(!id) return;
+  showMini('Hapus laporan?','Laporan ini akan dihapus permanen dan tidak bisa dibatalkan.',[{label:'Batal',cls:'secondary',fn:null},{label:'🗑️ Hapus',cls:'danger',fn:async()=>{ await db.from('reports').delete().eq('id',id); closeForm(); await loadAll(); toast('Laporan dihapus.','success'); }}]);
+}
+
+// ====== RINCIAN MODAL / HPP ======
+let costItemsState=[];
+function onCompToggle(){ syncCostItemsFromComps(); renderCostItems(); }
+function syncCostItemsFromComps(){ const comps=getSelectedComps(); comps.forEach(c=>{ if(!costItemsState.some(it=>it.label===c)) costItemsState.push({label:c,amount:0,auto:true}); }); costItemsState=costItemsState.filter(it=>!it.auto||comps.includes(it.label)); }
+function addCostItem(){ costItemsState.push({label:'',amount:0,auto:false}); renderCostItems(); }
+function removeCostItem(i){ costItemsState.splice(i,1); renderCostItems(); }
+function updCostLabel(i,v){ if(costItemsState[i]) costItemsState[i].label=v; }
+function updCostAmount(i,v){ if(costItemsState[i]) costItemsState[i].amount=Number(v)||0; recomputeCost(); }
+function recomputeCost(){ const tot=costItemsState.reduce((a,it)=>a+(Number(it.amount)||0),0); const ct=$('costTotal'); if(ct) ct.textContent=rp(tot); const fee=Number($('f_fee')&&$('f_fee').value)||0; const lp=$('labaPreview'); if(lp) lp.textContent=rp(fee-tot); return tot; }
+function renderCostItems(){ const box=$('costItems'); if(!box) return; box.innerHTML=costItemsState.map((it,i)=>`<div class="row" style="gap:8px;margin-bottom:6px"><input value="${esc(it.label)}" placeholder="Nama item/part" oninput="updCostLabel(${i},this.value)" ${it.auto?'readonly':''} style="flex:2" /><input type="number" min="0" value="${it.amount||''}" placeholder="0" oninput="updCostAmount(${i},this.value)" style="flex:1" /><button type="button" class="btn small secondary" onclick="removeCostItem(${i})">×</button></div>`).join(''); recomputeCost(); }
+
+// ====== DETAIL ======
+function mediaHtml(arr,label){
+  arr=arr||[];
+  if(!arr.length) return `<p class="muted">Tidak ada media.</p>`;
+  return `<div class="photo-grid">`+arr.map((m,i)=>{
+    const src=m.url||m.data;
+    return m.type==='video'?`<video src="${src}" controls></video>`:`<img src="${src}" onclick="previewDetail('${label}',${i})" />`;
+  }).join('')+`</div>`;
+}
+function openDetail(id){
+  const r=reports.find(x=>x.id===id); if(!r) return;
+  const lv=LEVELS[r.level]||LEVELS[1];
+  const money=(isOwner()&&FEATURES.profit)?`<tr><td>Biaya Jasa</td><td>${rp(r.fee)}</td></tr><tr><td>Modal / HPP</td><td>${rp(r.cost)}</td></tr><tr><td>Laba</td><td><b>${rp((r.fee||0)-(r.cost||0))}</b></td></tr><tr><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr>`:'';
+  detailMedia={before:(r.before_media||[]),after:(r.after_media||[])}; if($('detailContent')) $('detailContent').style.maxWidth='';
+  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end">${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Garansi</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
+  openModal('detailModal');
+  afterOpenDetail(r.id);
+}
+function previewDetail(label,i){ openLightbox(detailMedia[label],i); }
+function closeDetail(){ _openReportId=null; closeModal('detailModal'); }
+
+// ====== LIGHTBOX ======
+function openLightbox(list,i){
+  lbList=(list||[]).map(m=>({type:m.type,src:m.url||m.data})); lbIndex=i||0;
+  if(!lbList.length) return;
+  renderLb(); $('lightbox').classList.add('open');
+}
+function renderLb(){
+  const m=lbList[lbIndex]; if(!m) return;
+  $('lbMedia').innerHTML=m.type==='video'?`<video src="${m.src}" controls autoplay></video>`:`<img src="${m.src}" />`;
+  $('lbCount').textContent=`${lbIndex+1} / ${lbList.length}`;
+}
+function lbNav(d){ if(!lbList.length)return; lbIndex=(lbIndex+d+lbList.length)%lbList.length; renderLb(); }
+function closeLb(){ $('lightbox').classList.remove('open'); $('lbMedia').innerHTML=''; }
+document.addEventListener('keydown',e=>{
+  if(!$('lightbox').classList.contains('open')) return;
+  if(e.key==='Escape') closeLb();
+  if(e.key==='ArrowLeft') lbNav(-1);
+  if(e.key==='ArrowRight') lbNav(1);
+});
+
+// ====== WARRANTY ======
+function warrantyStatus(r){
+  if(!r.warranty_days) return {active:false,daysLeft:0};
+  const start=r.date_out||r.date_in; if(!start) return {active:false,daysLeft:0};
+  const end=new Date(start); end.setDate(end.getDate()+Number(r.warranty_days));
+  const now=new Date(); const daysLeft=Math.ceil((end-now)/(86400000));
+  return {active:daysLeft>=0,daysLeft:Math.max(0,daysLeft),end};
+}
+
+// ====== CARD ======
+function card(r){
+  const lv=LEVELS[r.level]||LEVELS[1];
+  const st=(r.status||'Proses').toLowerCase();
+  const stClass=st.includes('selesai')?'selesai':((st.includes('batal')||st.includes('gagal'))?'batal':'proses');
+  const firstImg=(r.after_media||[]).concat(r.before_media||[]).find(m=>m.type==='image');
+  const thumb=firstImg?`<img src="${firstImg.url||firstImg.data}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" />`:'';
+  return `<div class="card">${thumb}<div class="row"><h3>${esc(r.device)}</h3><span class="badge" style="background:${lv.color}">L${r.level}</span></div><div class="muted">${esc(r.brand||'-')} • ${esc(r.customer||'-')}</div><div class="row"><span class="pill ${stClass}">${esc(r.status||'Proses')}</span>${(isOwner()&&FEATURES.profit)?`<span>${rp(r.fee)}</span>`:''}</div><div class="row">${techBadge(r.assigned_to)}${ageBadge(r)}</div><div class="muted" style="font-size:12px">Tiket: ${esc(r.ticket_no||'-')} • ${fmtDate(r.date_in)}</div><div class="actions"><button class="btn small" onclick="openDetail('${r.id}')">Detail</button><button class="btn secondary small" onclick="openForm('${r.id}')">Edit</button></div></div>`;
+}
+let charts={};
+let recentDays=3; try{ const _rd=parseInt(localStorage.getItem('rl_recent_days'),10); if(_rd&&_rd>0) recentDays=_rd; }catch(e){}
+function recentReports(){ const now=Date.now(); const lim=recentDays*86400000; return reports.filter(r=>{ const d=r.date_in||r.created_at; if(!d) return false; return (now-new Date(d).getTime())<=lim; }); }
+function renderRecentRange(){ const box=$('recentRange'); if(!box) return; const opts=[3,7,14]; box.innerHTML=opts.map(d=>`<button class="ctab${recentDays===d?' active':''}" onclick="setRecentDays(${d})">${d} hari</button>`).join('')+`<button class="ctab${!opts.includes(recentDays)?' active':''}" onclick="askRecentDays()">${!opts.includes(recentDays)?recentDays+' hari ✎':'Custom'}</button>`; }
+function setRecentDays(d){ recentDays=d; try{localStorage.setItem('rl_recent_days',String(d));}catch(e){} renderRecentRange(); render(); }
+function askRecentDays(){ showPrompt('Rentang Kustom','Tampilkan pekerjaan berapa hari terakhir?','cth: 5',String(recentDays),v=>{ const n=parseInt(v,10); if(!n||n<1){ toast('Masukkan jumlah hari yang valid.','error'); return; } setRecentDays(n); }); }
+// ====== RENDER LIST & DASHBOARD ======
+function render(){
+  const q=($('search')?.value||'').toLowerCase();
+  const fl=$('filterLevel')?.value||'';
+  const fs=$('filterStatus')?.value||'';
+  const fb=$('filterBrand')?.value||'';
+  const list=reports.filter(r=>{
+    const hay=`${r.device} ${r.customer} ${r.ticket_no} ${r.brand}`.toLowerCase();
+    if(q&&!hay.includes(q)) return false;
+    if(fl&&String(r.level)!==fl) return false;
+    if(fb&&(r.brand||'')!==fb) return false;
+    if(fs){ const s=(r.status||'').toLowerCase(); if(fs==='Batal'){ if(!(s.includes('batal')||s.includes('gagal'))) return false; } else if(!s.includes(fs.toLowerCase())) return false; }
+    return true;
+  });
+  const grid=$('listGrid'); if(grid) grid.innerHTML=list.length?list.map(card).join(''):`<div class="empty">Belum ada laporan.</div>`;
+  renderRecentRange();
+  const rec=$('recentGrid'); if(rec){ const rr=recentReports(); rec.innerHTML=rr.length?rr.map(card).join(''):`<div class="empty">Tidak ada pekerjaan dalam ${recentDays} hari terakhir. Semua tetap tersimpan di menu Papan.</div>`; }
+  renderDash();
+  renderBoard();
+}
+function renderDash(){
+  const total=reports.length;
+  const selesai=reports.filter(r=>(r.status||'').toLowerCase().includes('selesai')).length;
+  const proses=reports.filter(r=>(r.status||'').toLowerCase().includes('proses')).length;
+  const revenue=reports.reduce((a,r)=>a+(Number(r.fee)||0),0);
+  const sg=$('statGrid');
+  if(sg){
+    let cards=`<div class="stat"><div class="num">${total}</div><div class="lbl">Total Laporan</div></div><div class="stat"><div class="num">${selesai}</div><div class="lbl">Selesai</div></div><div class="stat"><div class="num">${proses}</div><div class="lbl">Proses</div></div>`;
+    if(isOwner()&&FEATURES.profit){ const cost=reports.reduce((a,r)=>a+(Number(r.cost)||0),0); cards+=`<div class="stat"><div class="num">${rp(revenue)}</div><div class="lbl">Pendapatan</div></div><div class="stat"><div class="num">${rp(revenue-cost)}</div><div class="lbl">Laba</div></div>`; }
+    sg.innerHTML=cards;
+  }
+  const ins=$('insight');
+  if(ins){
+    if(!total){ ins.innerHTML='Belum ada data. Tambahkan laporan pertamamu untuk melihat statistik.'; }
+    else{ const lc={1:0,2:0,3:0,4:0}; reports.forEach(r=>lc[r.level]=(lc[r.level]||0)+1); const top=Object.keys(lc).sort((a,b)=>lc[b]-lc[a])[0]; ins.innerHTML=`💡 Total <b>${total}</b> pekerjaan, <b>${selesai}</b> selesai. Paling banyak <b>Level ${top}</b> (${LEVELS[top].name}).`; }
+  }
+  const wal=$('warrantyAlert');
+  if(wal){ const soon=reports.filter(r=>{const w=warrantyStatus(r); return w.active && w.daysLeft<=7;}).sort((a,b)=>warrantyStatus(a).daysLeft-warrantyStatus(b).daysLeft); wal.innerHTML=soon.length?`<div class="insight" style="background:#fff7ed;border-color:#fed7aa">⏰ <b>${soon.length}</b> garansi akan berakhir dalam ≤7 hari: `+soon.map(r=>`<span class="chip" style="cursor:pointer" onclick="openDetail('${r.id}')">${esc(r.device)} — sisa ${warrantyStatus(r).daysLeft}h</span>`).join(' ')+`</div>`:''; }
+  renderTechPerf();
+  if(FEATURES.dashboard&&FEATURES.charts) renderCharts();
+}
+function renderCharts(){
+  if(typeof Chart==='undefined') return;
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}}); charts={};
+  const days=[],counts=[];
+  for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const key=d.toISOString().slice(0,10); days.push(d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})); counts.push(reports.filter(r=>(r.date_in||'').slice(0,10)===key).length); }
+  const cd=$('chartDay'); if(cd) charts.day=new Chart(cd,{type:'line',data:{labels:days,datasets:[{label:'Pekerjaan',data:counts,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.2)',fill:true,tension:.3}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+  const lv=[1,2,3,4].map(l=>reports.filter(r=>r.level===l).length);
+  const cl=$('chartLevel'); if(cl) charts.level=new Chart(cl,{type:'doughnut',data:{labels:['L1','L2','L3','L4'],datasets:[{data:lv,backgroundColor:['#22c55e','#3b82f6','#f59e0b','#ef4444']}]},options:{plugins:{legend:{position:'bottom'}}}});
+  const cmp={}; reports.forEach(r=>(r.components||[]).forEach(c=>cmp[c]=(cmp[c]||0)+1)); const ct=Object.entries(cmp).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const cc=$('chartComp'); if(cc) charts.comp=new Chart(cc,{type:'bar',data:{labels:ct.map(x=>x[0]),datasets:[{label:'Jumlah',data:ct.map(x=>x[1]),backgroundColor:'#6366f1'}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}});
+  const br={}; reports.forEach(r=>{const b=r.brand||'Lainnya';br[b]=(br[b]||0)+1;}); const bt=Object.entries(br).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const cb=$('chartBrand'); if(cb) charts.brand=new Chart(cb,{type:'bar',data:{labels:bt.map(x=>x[0]),datasets:[{label:'Jumlah',data:bt.map(x=>x[1]),backgroundColor:'#22c55e'}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+}
+function renderFinance(){
+  const box=$('financeBox'); if(!box) return;
+  if(!(isOwner()&&FEATURES.profit)){ box.innerHTML=`<div class="empty">Fitur keuangan tidak aktif atau Anda bukan Owner.</div>`; return; }
+  const M={}; reports.forEach(r=>{ const d=(r.date_in||r.created_at||'').slice(0,7); if(!d) return; if(!M[d]) M[d]={rev:0,cost:0,n:0}; M[d].rev+=Number(r.fee)||0; M[d].cost+=Number(r.cost)||0; M[d].n++; });
+  const keys=Object.keys(M).sort().reverse();
+  if(!keys.length){ box.innerHTML=`<div class="empty">Belum ada data keuangan.</div>`; return; }
+  const tr=keys.reduce((a,k)=>a+M[k].rev,0), tc=keys.reduce((a,k)=>a+M[k].cost,0);
+  const rows=keys.map(k=>{ const m=M[k]; const lbl=new Date(k+'-01').toLocaleDateString('id-ID',{month:'long',year:'numeric'}); return `<tr><td>${lbl}</td><td>${m.n}</td><td>${rp(m.rev)}</td><td>${rp(m.cost)}</td><td><b>${rp(m.rev-m.cost)}</b></td></tr>`; }).join('');
+  box.innerHTML=`<div class="stat-grid"><div class="stat"><div class="num">${rp(tr)}</div><div class="lbl">Total Pendapatan</div></div><div class="stat"><div class="num">${rp(tc)}</div><div class="lbl">Total Modal</div></div><div class="stat"><div class="num">${rp(tr-tc)}</div><div class="lbl">Total Laba</div></div></div><table class="ftbl"><tr><th>Bulan</th><th>Jml</th><th>Pendapatan</th><th>Modal</th><th>Laba</th></tr>${rows}</table>`;
+}
+
+function renderTechPerf(){ const box=$('techPerf'); if(!box) return; const assigned=reports.filter(r=>r.assigned_to); const techIds=[...new Set(assigned.map(r=>r.assigned_to))]; if(techIds.length<2){ box.innerHTML=''; return; } const agg={}; assigned.forEach(r=>{ const k=r.assigned_to; if(!agg[k]) agg[k]={total:0,done:0,lv:{1:0,2:0,3:0,4:0}}; agg[k].total++; if((r.status||'').toLowerCase().includes('selesai')) agg[k].done++; agg[k].lv[r.level]=(agg[k].lv[r.level]||0)+1; }); const rowsArr=Object.entries(agg).sort((a,b)=>b[1].total-a[1].total); const top=rowsArr[0]; const rows=rowsArr.map(([uid,d])=>`<tr><td>${techBadge(uid)}</td><td style="text-align:center"><b>${d.total}</b></td><td style="text-align:center">${d.done}</td><td style="text-align:center">${d.lv[1]||0}</td><td style="text-align:center">${d.lv[2]||0}</td><td style="text-align:center">${d.lv[3]||0}</td><td style="text-align:center">${d.lv[4]||0}</td></tr>`).join(''); box.innerHTML=`<div class="insight" style="margin-bottom:24px"><div style="font-weight:700;margin-bottom:8px">👷 Kinerja Teknisi</div><div class="muted" style="margin-bottom:10px">🏆 Paling banyak mengerjakan: <b>${esc(techName(top[0]))}</b> (${top[1].total} servis)</div><div style="overflow-x:auto"><table class="ftbl"><tr><th>Teknisi</th><th>Total</th><th>Selesai</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th></tr>${rows}</table></div></div>`; }
+// ====== KOLABORASI: TIM & LABEL TEKNISI ======
+async function loadTeam(){ if(!db) return; const {data}=await db.from('profiles').select('user_id,name,email,role,color').eq('store_id',STORE_ID).order('created_at',{ascending:true}); TEAM=data||[]; if(isOwner()) await ensureTechColors(); }
+async function ensureTechColors(){ let i=0; for(const t of TEAM){ if(!t.color){ const c=TECH_COLORS[i%TECH_COLORS.length]; try{ await db.from('profiles').update({color:c}).eq('user_id',t.user_id); }catch(e){} t.color=c; } i++; } }
+function techById(id){ return TEAM.find(t=>t.user_id===id); }
+function techColor(id){ const t=techById(id); return t&&t.color?t.color:'#6b7280'; }
+function techName(id){ const t=techById(id); return t?(t.name||t.email||'-'):'-'; }
+function techBadge(id){ if(!id) return `<span class="tech-badge" style="background:#e5e7eb;color:#6b7280">Belum di-assign</span>`; return `<span class="tech-badge" style="background:${techColor(id)}"><span class="tech-dot"></span>${esc(techName(id))}</span>`; }
+
+// ====== KOLABORASI: NOTIFIKASI UNREAD ======
+async function loadUnread(){ if(!db) return; try{ const {data}=await db.rpc('unread_counts'); unreadMap={}; (data||[]).forEach(r=>unreadMap[r.report_id]=Number(r.unread)); }catch(e){ unreadMap={}; } paintNavNotif(); }
+function totalUnread(){ return Object.values(unreadMap).reduce((a,b)=>a+(Number(b)||0),0); }
+function paintNavNotif(){ const d=$('notifDot'); if(!d) return; const n=totalUnread(); d.style.display=n>0?'flex':'none'; d.textContent=n>9?'9+':String(n); }
+function subscribeComments(){ if(!db||!ME.user_id) return; if(cmtChannel){ try{db.removeChannel(cmtChannel);}catch(e){} } cmtChannel=db.channel('cmt-'+STORE_ID).on('postgres_changes',{event:'INSERT',schema:'public',table:'comments',filter:'store_id=eq.'+STORE_ID},p=>{ const c=p.new; if(!c) return; if(c.report_id===_openReportId){ renderComments(_openReportId); markRead(_openReportId); } else if(c.user_id!==ME.user_id){ unreadMap[c.report_id]=(unreadMap[c.report_id]||0)+1; paintNavNotif(); renderBoard(); } }).subscribe(); }
+async function initCollab(){ await loadTeam(); if(!FEATURES.collab) return; await loadUnread(); subscribeComments(); }
+
+// ====== KOLABORASI: PANEL DETAIL (Aktivitas / Komentar / Checklist) ======
+function fmtDateTime(d){ if(!d) return '-'; const x=new Date(d); return x.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+function actIcon(a){ return ({create:'🆕',status:'🔄',stage:'📍',level:'🎚️',assign:'👤',media:'📷',checklist:'✅',comment:'💬'})[a]||'✏️'; }
+function afterOpenDetail(rid){ }
+function collabTab(t){ _collabTab=t; ['akt','cmt','chk'].forEach(k=>{ const p=$('cpane-'+k); if(p) p.style.display=k===t?'':'none'; const b=$('ctab-'+k); if(b) b.classList.toggle('active',k===t); }); }
+async function renderActivity(rid){ const pane=$('editActLog'); if(!pane||!db) return; pane.innerHTML='<p class="muted" style="font-size:12px">Memuat…</p>'; const {data}=await db.from('activity_log').select('*').eq('report_id',rid).order('created_at',{ascending:false}); if(!data||!data.length){ pane.innerHTML='<p class="muted" style="font-size:12px">Belum ada aktivitas.</p>'; return; } pane.innerHTML='<div class="act-scroll">'+data.map(a=>`<div class="act-item"><span class="act-ic">${actIcon(a.action)}</span><div><div>${esc(a.detail||a.action)}</div><div class="muted" style="font-size:11px">${esc(a.user_name||'-')} • ${fmtDateTime(a.created_at)}</div></div></div>`).join('')+'</div>'; }
+async function renderComments(rid){ const pane=$('sideCmt'); if(!pane||!db) return; const {data}=await db.from('comments').select('*').eq('report_id',rid).order('created_at',{ascending:true}); const list=(data||[]).map(c=>{ const del=(c.user_id===ME.user_id||isOwner())?`<button class="cmt-del" onclick="delComment('${c.id}','${rid}')">×</button>`:''; return `<div class="cmt"><div class="cmt-head"><span class="tech-badge" style="background:${techColor(c.user_id)}"><span class="tech-dot"></span>${esc(c.user_name||'-')}</span><span class="muted" style="font-size:11px">${fmtDateTime(c.created_at)}</span>${del}</div><div class="cmt-body">${esc(c.body)}</div></div>`; }).join(''); pane.innerHTML=`<div class="cmt-list" id="cmtList">${list||'<p class="muted">Belum ada komentar. Mulai diskusi…</p>'}</div><div class="cmt-box"><textarea id="cmtInput" placeholder="Tulis komentar / update (mis: sedang menunggu part)…" rows="2"></textarea><button class="btn small" onclick="sendComment('${rid}')">Kirim</button></div>`; const cl=$('cmtList'); if(cl) cl.scrollTop=cl.scrollHeight; }
+async function sendComment(rid){ const el=$('cmtInput'); const body=(el&&el.value||'').trim(); if(!body||!db) return; el.value=''; await db.from('comments').insert({store_id:STORE_ID,report_id:rid,user_id:ME.user_id,user_name:ME.name||ME.email,body}); await renderComments(rid); await markRead(rid); }
+async function delComment(id,rid){ if(!db) return; await db.from('comments').delete().eq('id',id); renderComments(rid); }
+async function markRead(rid){ if(!db||!ME.user_id) return; try{ await db.from('comment_reads').upsert({user_id:ME.user_id,report_id:rid,last_read:new Date().toISOString()},{onConflict:'user_id,report_id'}); }catch(e){} unreadMap[rid]=0; paintNavNotif(); renderBoard(); }
+
+// ====== KOLABORASI: ASSIGN & TAHAP ======
+function assignStageHtml(r){ if(!FEATURES.collab) return ''; const opts=boardStages().map(s=>`<option${(r.stage||boardStages()[0])===s?' selected':''}>${esc(s)}</option>`).join(''); return `<div style="margin-top:12px"><label>Tahap</label><select onchange="setStage('${r.id}',this.value)">${opts}</select></div>`; }
+async function setStage(id,stage){ if(!db) return; await db.from('reports').update({stage,updated_at:new Date().toISOString()}).eq('id',id); const r=reports.find(x=>x.id===id); if(r) r.stage=stage; renderBoard(); if($('detailModal').classList.contains('open')&&_openReportId===id) renderActivity(id); }
+async function setAssign(id,uid){ if(!db) return; await db.from('reports').update({assigned_to:uid||null,updated_at:new Date().toISOString()}).eq('id',id); const r=reports.find(x=>x.id===id); if(r) r.assigned_to=uid||null; renderBoard(); render(); if($('detailModal').classList.contains('open')&&_openReportId===id) renderActivity(id); }
+
+// ====== KOLABORASI: PAPAN KANBAN ======
+async function saveBoardStages(){ if(db) await db.from('app_settings').upsert({store_id:STORE_ID,key:'board_stages',value:boardStages(),updated_at:new Date().toISOString()},{onConflict:'store_id,key'}); }
+function addStage(){ showPrompt('Tambah Kolom','Nama kolom / tahap baru:','cth: QC / Testing','',async v=>{ const name=(v||'').trim(); if(!name) return; const arr=boardStages().slice(); if(arr.includes(name)){ toast('Kolom sudah ada.','error'); return; } arr.push(name); BOARD_STAGES=arr; await saveBoardStages(); renderBoard(); toast('Kolom ditambahkan.','success'); }); }
+async function delStage(s){ if(!isOwner()){ toast('Hanya Owner.','error'); return; } const arr=boardStages().slice(); if(arr.length<=1){ toast('Minimal 1 kolom.','error'); return; } const cnt=reports.filter(r=>(r.stage||boardStages()[0])===s).length; if(cnt>0){ toast('Pindahkan dulu '+cnt+' kartu dari kolom ini.','error'); return; } BOARD_STAGES=arr.filter(x=>x!==s); await saveBoardStages(); renderBoard(); }
+function addBoardCard(stage){ openForm(); _newStage=stage||null; }
+function serviceAge(r){ const start=r.date_in||r.created_at; if(!start) return 0; return Math.floor((Date.now()-new Date(start))/86400000); }
+function ageBadge(r){ const s=(r.status||'').toLowerCase(); if(s.includes('selesai')||r.stage==='Selesai'||r.stage==='Diambil') return ''; const d=serviceAge(r); let cls='age-ok'; if(d>7) cls='age-danger'; else if(d>3) cls='age-warn'; return `<span class="age-badge ${cls}">${d}h</span>`; }
+function renderBoard(){ const wrap=$('boardWrap'); if(!wrap) return; const first=boardStages()[0]; const cols=boardStages().map(s=>{ const items=reports.filter(r=>(r.stage||first)===s); const cards=items.map(boardCard).join('')||`<div class="muted" style="font-size:12px;padding:6px">—</div>`; const del=isOwner()?`<button class="bcol-del" title="Hapus kolom" onclick="delStage('${esc(s)}')">×</button>`:''; return `<div class="bcol" ondragover="boardDragOver(event)" ondrop="boardDrop(event,'${esc(s)}')"><div class="bcol-head" style="border-color:${stageColor(s)}"><span>${esc(s)}</span><span style="display:flex;align-items:center;gap:6px"><span class="bcount">${items.length}</span>${del}</span></div><div class="bcol-body">${cards}</div><button class="bcol-add" onclick="addBoardCard('${esc(s)}')">+ Tambah kartu</button></div>`; }).join(''); const addCol=isOwner()?`<div class="bcol bcol-addcol" onclick="addStage()">+ Tambah kolom</div>`:''; wrap.innerHTML=cols+addCol; }
+function boardCard(r){ const un=unreadMap[r.id]?`<span class="notif-dot" style="position:static;display:inline-flex">${unreadMap[r.id]>9?'9+':unreadMap[r.id]}</span>`:''; return `<div class="bcard" draggable="true" ondragstart="boardDragStart(event,'${r.id}')" onclick="openDetail('${r.id}')"><div class="row"><b style="font-size:13px">${esc(r.device)}</b>${ageBadge(r)}</div><div class="muted" style="font-size:11px">${esc(r.customer||'-')} • L${r.level}</div><div class="row" style="margin-top:6px">${techBadge(r.assigned_to)}${un}</div></div>`; }
+function boardDragStart(e,id){ _dragId=id; try{e.dataTransfer.setData('text/plain',id);}catch(_){} }
+function boardDragOver(e){ e.preventDefault(); }
+function boardDrop(e,stage){ e.preventDefault(); const id=_dragId||((e.dataTransfer&&e.dataTransfer.getData('text/plain'))); if(id) setStage(id,stage); _dragId=null; }
+
+// (Fitur checklist & part dihapus sesuai permintaan)
+// ====== AUTH ======
+let authReady=false, lastCred=null, sessChannel=null, idleTimer=null, currentSid=null;
+const IDLE_LIMIT_MS=30*60*1000;
+function hideBoot(){ const b=$('bootLoader'); if(b) b.style.display='none'; }
+function showAuth(show){ hideBoot(); $('authScreen').style.display=show?'flex':'none'; }
+function showApp(){ showAuth(false); const h=$('appHeader'); if(h) h.style.display=''; const m=$('appMain'); if(m) m.style.display=''; }
+function togglePwFormForce(){ $('pwForm').style.display='block'; $('pwToggle').style.display='none'; $('forgotBtn').style.display='block'; }
+function togglePwForm(){ const f=$('pwForm'); const show=f.style.display==='none'; f.style.display=show?'block':'none'; $('pwToggle').style.display=show?'none':'block'; $('forgotBtn').style.display=show?'block':'none'; }
+async function doLogin(){
+  const email=$('authEmail').value.trim(), pass=$('authPass').value;
+  if(!email||!pass){ $('authError').textContent='Email & password wajib diisi.'; return; }
+  if(!db){ $('authError').textContent='Supabase belum dikonfigurasi.'; return; }
+  $('authBtn').disabled=true; $('authBtn').textContent='Memproses...';
+  const {error}=await db.auth.signInWithPassword({email,password:pass});
+  $('authBtn').disabled=false; $('authBtn').textContent='Masuk';
+  if(error){ $('authError').textContent='Login gagal: '+error.message; return; }
+  lastCred={email,password:pass};
+  try{ localStorage.setItem('rl_last_email',email); }catch(e){}
+  await afterLogin();
+}
+async function afterLogin(){
+  $('authError').textContent=''; authReady=true;
+  await fetchMe();
+  if(!(await guardStore())){ authReady=false; showAuth(true); togglePwFormForce(); $('authError').textContent='Akun ini bukan milik toko ini. Gunakan akun yang terdaftar untuk toko ini.'; return; }
+  await fetchConfig(); applyRole();
+  await claimSession();
+  showApp(); resetIdle();
+  await initCollab();
+  await loadAll(); showTab('dash'); maybeWizard(); maybeTour();
+}
+async function doLogout(){
+  stopIdle();
+  try{ if(currentSid&&ME.user_id) await db.from('active_session').delete().eq('user_id',ME.user_id); }catch(e){}
+  try{ await db.auth.signOut(); }catch(e){}
+  location.reload();
+}
+function forceLogout(msg){ stopIdle(); try{db.auth.signOut();}catch(e){} toast(msg||'Sesi berakhir.','error'); setTimeout(()=>location.reload(),2200); }
+function newSid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+async function claimSession(){
+  if(!db||!ME.user_id) return;
+  currentSid=newSid();
+  await db.from('active_session').upsert({user_id:ME.user_id,current_sid:currentSid,updated_at:new Date().toISOString()});
+  if(sessChannel){ try{db.removeChannel(sessChannel);}catch(e){} }
+  sessChannel=db.channel('sess-'+ME.user_id).on('postgres_changes',{event:'*',schema:'public',table:'active_session',filter:'user_id=eq.'+ME.user_id},p=>{ const sid=p.new&&p.new.current_sid; if(sid&&sid!==currentSid) forceLogout('Akun ini login di perangkat lain.'); }).subscribe();
+}
+function resetIdle(){ if(idleTimer) clearTimeout(idleTimer); idleTimer=setTimeout(lockApp,IDLE_LIMIT_MS); }
+function stopIdle(){ if(idleTimer) clearTimeout(idleTimer); idleTimer=null; }
+function lockApp(){ stopIdle(); showAuth(true); if(bioEnabled()){ $('pwForm').style.display='none'; $('pwToggle').style.display='block'; $('forgotBtn').style.display='none'; $('authSub').textContent='Terkunci — tap sidik jari untuk lanjut'; } else { $('authSub').textContent='Terkunci — masuk lagi'; togglePwFormForce(); } }
+['click','keydown','mousemove','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{ if(authReady&&$('authScreen').style.display!=='flex') resetIdle(); },{passive:true}));
+
+// ====== BIOMETRIK (WebAuthn) ======
+const BIO_KEY='rl_bio', BIO_CRED='rl_bio_id', BIO_LOGIN='rl_bio_login';
+function bioEnabled(){ return !!localStorage.getItem(BIO_KEY); }
+function b64ToBuf(b64){ const bin=atob(b64); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); return u.buffer; }
+function bufToB64(buf){ const u=new Uint8Array(buf); let s=''; u.forEach(b=>s+=String.fromCharCode(b)); return btoa(s); }
+function saveCred(id){ localStorage.setItem(BIO_CRED,id); localStorage.setItem(BIO_KEY,'1'); if(lastCred) localStorage.setItem(BIO_LOGIN,btoa(JSON.stringify(lastCred))); }
+function clearBio(){ localStorage.removeItem(BIO_KEY); localStorage.removeItem(BIO_CRED); localStorage.removeItem(BIO_LOGIN); }
+function bioTap(){ if(bioEnabled()) doBiometric(); else { $('authSub').textContent='Sidik jari belum aktif. Masuk dulu, lalu aktifkan di ⚙️.'; togglePwFormForce(); } }
+async function enableBiometric(){
+  if(!window.PublicKeyCredential){ toast('Perangkat tidak mendukung biometrik.','error'); return false; }
+  try{
+    const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:BRAND.name||'RepairLog'},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:ME.email||'user',displayName:ME.name||'User'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000}});
+    saveCred(bufToB64(cred.rawId)); return true;
+  }catch(e){ toast('Gagal mengaktifkan biometrik: '+(e.message||e),'error'); return false; }
+}
+async function doBiometric(){
+  try{
+    const id=localStorage.getItem(BIO_CRED); if(!id){ togglePwFormForce(); return; }
+    await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:b64ToBuf(id)}],userVerification:'required',timeout:60000}});
+    const {data:{session}}=await db.auth.getSession();
+    if(session){ authReady=true; if(!ME.user_id) await fetchMe(); if(!(await guardStore())){ showAuth(true); togglePwFormForce(); $('authError').textContent='Akun ini bukan milik toko ini. Gunakan akun yang terdaftar untuk toko ini.'; return; } await fetchConfig(); applyRole(); showApp(); resetIdle(); await initCollab(); await loadAll(); showTab('dash'); return; }
+    const saved=localStorage.getItem(BIO_LOGIN);
+    if(saved){ const c=JSON.parse(atob(saved)); const {error}=await db.auth.signInWithPassword({email:c.email,password:c.password}); if(error){ $('authError').textContent='Sesi berakhir, masuk manual.'; togglePwFormForce(); return; } lastCred=c; await afterLogin(); }
+    else togglePwFormForce();
+  }catch(e){ $('authError').textContent='Verifikasi sidik jari gagal.'; }
+}
+
+// ====== PENGATURAN ======
+function openSettings(){ const on=bioEnabled(); $('bioToggleBtn').textContent=on?'Nonaktifkan':'Aktifkan'; $('bioStatus').textContent=on?'Sidik jari aktif di perangkat ini.':'Masuk cukup dengan biometrik di perangkat ini.'; if($('setName')) $('setName').value=ME.name||''; openModal('settingsModal'); }
+function closeSettings(){ closeModal('settingsModal'); }
+async function toggleBiometric(){
+  if(bioEnabled()){ clearBio(); toast('Biometrik dinonaktifkan.','success'); }
+  else{ const ok=await enableBiometric(); if(ok) toast('Biometrik aktif. Lain kali cukup tap sidik jari.','success'); }
+  openSettings();
+}
+
+// ====== OWNER (PIN + panel) ======
+async function sha256(t){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)); return bufToB64(b); }
+async function getPinHash(){ if(!db) return null; const {data}=await db.from('app_settings').select('value').eq('store_id',STORE_ID).eq('key','owner_pin').maybeSingle(); return data&&data.value?data.value.hash:null; }
+function openOwner(){ if(!isOwner()){ toast('Hanya Owner.','error'); return; } $('ownerPanel').style.display='none'; $('ownerLock').style.display='block'; $('ownerPin').value=''; $('ownerErr').textContent=''; getPinHash().then(h=>{ $('ownerLockMsg').textContent=h?'Masukkan PIN owner.':'Belum ada PIN. Buat PIN baru (min 4 digit) untuk mengunci menu ini.'; }); openModal('ownerModal'); }
+function closeOwner(){ closeModal('ownerModal'); }
+async function unlockOwner(){
+  const pin=$('ownerPin').value.trim(); if(pin.length<4){ $('ownerErr').textContent='PIN minimal 4 digit.'; return; }
+  const h=await getPinHash();
+  if(!h){ const nh=await sha256(pin); await db.from('app_settings').upsert({store_id:STORE_ID,key:'owner_pin',value:{hash:nh},updated_at:new Date().toISOString()},{onConflict:'store_id,key'}); toast('PIN owner dibuat.','success'); showOwnerPanel(); return; }
+  if(await sha256(pin)===h) showOwnerPanel(); else $('ownerErr').textContent='PIN salah.';
+}
+async function showOwnerPanel(){
+  $('ownerLock').style.display='none'; $('ownerPanel').style.display='block';
+  $('brName').value=BRAND.name||''; $('brTagline').value=BRAND.tagline||''; $('brLogo').value=BRAND.logo||''; $('brColor').value=BRAND.color||'#6366f1'; $('brPrefixCo').value=BRAND.ticketCompany||'';
+  const _lp=$('brLogoPreview'); if(_lp) _lp.innerHTML=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" style="width:100%;height:100%;object-fit:contain" />`:esc(BRAND.logo||'🛠️');
+  const _ls=$('brLogoStatus'); if(_ls) _ls.textContent=BRAND.logoUrl?'Logo PNG aktif.':'Jika diisi, logo PNG dipakai menggantikan emoji.';
+  buildFeatChecks(); loadUsers();
+  const _sc=$('supportContact'); if(_sc) _sc.textContent=SUPPORT_CONTACT?(' ('+SUPPORT_CONTACT+')'):'';
+}
+async function changePin(){
+  const a=$('newPin').value.trim(), b=$('newPin2').value.trim();
+  if(a.length<4){ toast('PIN minimal 4 digit.','error'); return; }
+  if(a!==b){ toast('PIN tidak sama.','error'); return; }
+  const nh=await sha256(a); await db.from('app_settings').upsert({store_id:STORE_ID,key:'owner_pin',value:{hash:nh},updated_at:new Date().toISOString()},{onConflict:'store_id,key'});
+  $('newPin').value=''; $('newPin2').value=''; toast('PIN owner diperbarui.','success');
+}
+
+// ====== FEATURE FLAGS (owner) ======
+function buildFeatChecks(){ const keys=Object.keys(FEAT_LABELS).filter(featAllowed); const hidden=Object.keys(FEAT_LABELS).length-keys.length; $('featChecks').innerHTML=keys.map(k=>`<label class="chk"><input type="checkbox" value="${k}" ${FEATURES[k]?'checked':''}> ${esc(FEAT_LABELS[k])}</label>`).join('')+(hidden?`<div class="muted" style="font-size:11px;flex-basis:100%;margin-top:4px">Sebagian fitur dinonaktifkan oleh penyedia layanan sesuai paket.</div>`:''); }
+async function saveFeatures(){
+  const obj={...FEATURES}; document.querySelectorAll('#featChecks input').forEach(i=>obj[i.value]=i.checked);
+  Object.keys(obj).forEach(k=>{ if(!featAllowed(k)) obj[k]=false; });
+  FEATURES=obj; applyFeatures();
+  if(db) await db.from('app_settings').upsert({store_id:STORE_ID,key:'features',value:FEATURES,updated_at:new Date().toISOString()},{onConflict:'store_id,key'});
+  toast('Pengaturan fitur disimpan.','success');
+}
+
+// ====== KELOLA PENGGUNA (owner) ======
+async function loadUsers(){
+  const box=$('userList'); if(!box) return;
+  if(!db){ box.textContent='-'; return; }
+  const {data}=await db.from('profiles').select('*').eq('store_id',STORE_ID).order('created_at',{ascending:true});
+  if(!data||!data.length){ box.innerHTML='<span class="muted">Belum ada pengguna terdaftar.</span>'; return; }
+  box.innerHTML=data.map(u=>`<div class="set-row"><div><div style="font-weight:600">${esc(u.name||u.email||'-')}</div><div class="muted">${esc(u.email||'')} • ${u.role==='owner'?'👑 Owner':'🔧 Teknisi'}</div></div>${u.role==='owner'?`<button class="btn small secondary" onclick="setUserRole('${u.user_id}','teknisi')">Jadikan Teknisi</button>`:`<button class="btn small" onclick="setUserRole('${u.user_id}','owner')">Jadikan Owner</button>`}</div>`).join('');
+}
+async function setUserRole(uid,role){
+  showMini('Ubah role pengguna?','Jadikan pengguna ini sebagai '+(role==='owner'?'Owner':'Teknisi')+'?',[{label:'Batal',cls:'secondary',fn:null},{label:'Ya, ubah',fn:async()=>{ await db.from('profiles').update({role}).eq('user_id',uid); loadUsers(); loadTeam(); toast('Role pengguna diperbarui.','success'); }}]);
+}
+
+// ====== LINK GARANSI PUBLIK ======
+function copyLink(id,btn){ const url=location.origin+location.pathname+'#/g/'+id; const ok=()=>{ if(btn){ const t=btn.dataset.orig||btn.innerHTML; btn.dataset.orig=t; btn.innerHTML='✅ Link disalin!'; btn.classList.add('copied'); setTimeout(()=>{ btn.innerHTML=t; btn.classList.remove('copied'); },1800); } else { toast('Link garansi disalin.','success'); } }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok,()=>showPrompt('Salin Link Garansi','Salin link ini secara manual:','',url,null)); } else { showPrompt('Salin Link Garansi','Salin link ini secara manual:','',url,null); } }
+function handleRoute(){ const m=location.hash.match(/^#\/g\/(.+)$/); if(m){ renderPublic(m[1]); return true; } return false; }
+window.addEventListener('hashchange',()=>{ if(!handleRoute()) location.reload(); });
+async function renderPublic(id){
+  hideBoot();
+  document.querySelector('header').style.display='none'; document.querySelector('.container').style.display='none'; $('authScreen').style.display='none';
+  const pv=$('publicView'); pv.style.display='block'; pv.innerHTML='<div class="pub-card">Memuat...</div>';
+  let r=null; if(db){ const {data}=await db.from('reports_public').select('*').eq('id',id).maybeSingle(); r=data; }
+  if(!r){ pv.innerHTML='<div class="pub-card"><h2>Data tidak ditemukan</h2><p class="muted">Link garansi tidak valid.</p></div>'; return; }
+  const lv=LEVELS[r.level]||LEVELS[1]; const w=warrantyStatus(r);
+  const wend=w.end?fmtDate(w.end):'-';
+  const wHtml=r.warranty_days?(w.active?`<div class="pub-warranty ok">✅ Garansi AKTIF — sisa <b>${w.daysLeft} hari</b><br>Berlaku sampai <b>${wend}</b></div>`:`<div class="pub-warranty no">❌ Garansi sudah berakhir${w.end?' ('+wend+')':''}</div>`):`<div class="pub-warranty no">Tanpa garansi</div>`;
+  const bd=BRAND;
+  pv.innerHTML=`<div class="pub-card"><div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">${bd.logoUrl?`<img src="${esc(bd.logoUrl)}" alt="logo" style="height:48px;width:48px;object-fit:contain" />`:esc(bd.logo||'🛠️')}</div><h1>${esc(bd.name||'RepairLog')}</h1><p class="muted">${esc(bd.tagline||'')}</p></div><div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">No. Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>${wHtml}<table class="ftbl"><tr><td>Device</td><td>${esc(r.device||'-')}</td></tr><tr><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr><tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Lama Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr></table>${(r.components||[]).length?`<div style="margin-top:10px"><div class="muted" style="margin-bottom:4px">Komponen / bagian yang dikerjakan:</div>${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Sebelum</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ Sesudah</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="insight" style="margin-top:16px"><b>ℹ️ Info garansi untuk customer</b><br>• Simpan halaman ini sebagai bukti servis & garansi.<br>• Garansi berlaku untuk perbaikan yang sama selama masa garansi di atas.<br>• Garansi hangus bila segel rusak, terkena cairan, atau ada kerusakan fisik baru akibat pemakaian.<br>• Tunjukkan halaman ini saat klaim garansi.</div><p class="muted" style="text-align:center;margin-top:16px;font-size:12px">Dokumentasi servis oleh ${esc(bd.name||'RepairLog')}</p></div>`;
+}
+
+// ====== CETAK / PDF ======
+function doPrint(id){
+  const r=reports.find(x=>x.id===id); if(!r) return;
+  const lv=LEVELS[r.level]||LEVELS[1];
+  const imgs=a=>(a||[]).filter(m=>m.type==='image').map(m=>`<img src="${m.url||m.data}" />`).join('');
+  const logo=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" alt="logo" />`:`<div class="logo-emoji">${esc(BRAND.logo||'🛠️')}</div>`;
+  const comps=(r.components||[]).length?esc((r.components||[]).join(', ')):'-';
+  $('printArea').innerHTML=`<div class="print-head">${logo}<h1>${esc(BRAND.name||'RepairLog')} — Laporan Servis</h1></div><div class="print-sub">Tiket: ${esc(r.ticket_no||'-')} &nbsp;•&nbsp; Dicetak ${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</div><table class="print-tbl"><tr><td>Device</td><td>${esc(r.device)}</td><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td><td>No. HP / WA</td><td>${esc(r.customer_phone||'-')}</td></tr><tr><td>Level</td><td>L${r.level} ${lv.name}</td><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td><td>Tgl Ambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Biaya</td><td>${rp(r.fee)}</td><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr><tr><td>Garansi</td><td colspan="3">${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr><tr><td>Komponen</td><td colspan="3">${comps}</td></tr></table><h3>Pekerjaan</h3><p>${esc(r.tasks||'-')}</p><div class="print-ba"><div><h4>BEFORE</h4><p>${esc(r.before_notes||'-')}</p><div class="photo-grid">${imgs(r.before_media)}</div></div><div><h4>AFTER</h4><p>${esc(r.after_notes||'-')}</p><div class="photo-grid">${imgs(r.after_media)}</div></div></div><div class="print-foot">Kartu garansi & bukti servis oleh ${esc(BRAND.name||'RepairLog')} — Dicetak ${new Date().toLocaleString('id-ID')}</div>`;
+  window.print();
+}
+function doReceipt(id){
+  const r=reports.find(x=>x.id===id); if(!r) return;
+  const logo=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" alt="logo" />`:`<div class="logo-emoji">${esc(BRAND.logo||'🛠️')}</div>`;
+  $('printArea').innerHTML=`<div class="print-head">${logo}<h1>${esc(BRAND.name||'RepairLog')}</h1></div><div class="print-sub">${esc(BRAND.tagline||'')} — TANDA TERIMA SERVIS</div><table class="print-tbl"><tr><td>No. Tiket</td><td>${esc(r.ticket_no||'-')}</td><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td><td>No. HP / WA</td><td>${esc(r.customer_phone||'-')}</td></tr><tr><td>Device</td><td>${esc(r.device||'-')}</td><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Keluhan</td><td colspan="3">${esc(r.before_notes||'-')}</td></tr><tr><td>Kelengkapan</td><td colspan="3">${esc((r.components||[]).join(', ')||'-')}</td></tr><tr><td>Estimasi Biaya</td><td colspan="3">${r.fee?rp(r.fee):'Menyusul'}</td></tr></table><div class="receipt-note"><b>Catatan:</b><br>• Simpan struk ini sebagai bukti pengambilan barang.<br>• Barang yang tidak diambil lebih dari 30 hari di luar tanggung jawab toko.<br>• Estimasi biaya & waktu dapat berubah sesuai kondisi kerusakan.</div><div class="receipt-sign"><div>Penerima,<br><br><br>( ${esc(BRAND.name||'')} )</div><div>Customer,<br><br><br>( ${esc(r.customer||'')} )</div></div><div class="print-foot">${esc(BRAND.name||'RepairLog')} — Dicetak ${new Date().toLocaleString('id-ID')}</div>`;
+  window.print();
+}
+
+// ====== WHATSAPP, EXPORT, LUPA PASSWORD, WIZARD ======
+function waNumber(phone){ let p=(phone||'').replace(/[^0-9]/g,''); if(!p) return ''; if(p.startsWith('0')) p='62'+p.slice(1); else if(p.startsWith('8')) p='62'+p; return p; }
+function waChat(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n,'whatsapp'); }
+function waSend(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } const link=location.origin+location.pathname+'#/g/'+r.id; const msg='Halo '+(r.customer||'')+', berikut kartu garansi servis '+r.device+' di '+(BRAND.name||'RepairLog')+':\n'+link; window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'whatsapp'); }
+function csvCell(v){ v=(v==null?'':String(v)); return '"'+v.replace(/"/g,'""')+'"'; }
+function exportCsv(){
+  if(!isOwner()){ toast('Hanya Owner.','error'); return; }
+  const head=['Tiket','Masuk','Diambil','Device','Merek','Customer','WhatsApp','Level','Status','Biaya','Modal','Laba','Pembayaran','Garansi(hari)','Pekerjaan'];
+  const lines=[head.map(csvCell).join(',')];
+  reports.forEach(r=>{ const laba=(Number(r.fee)||0)-(Number(r.cost)||0); lines.push([r.ticket_no,(r.date_in||'').slice(0,10),(r.date_out||'').slice(0,10),r.device,r.brand,r.customer,r.customer_phone,'L'+r.level,r.status,Number(r.fee)||0,Number(r.cost)||0,laba,r.payment_status,r.warranty_days||0,(r.tasks||'').replace(/\n/g,' ')].map(csvCell).join(',')); });
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='laporan-servis-'+new Date().toISOString().slice(0,10)+'.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+async function forgotPw(){
+  const email=($('authEmail').value||'').trim();
+  if(!email){ $('authError').textContent='Isi email dulu, lalu klik "Lupa password?".'; return; }
+  if(!db){ $('authError').textContent='Supabase belum dikonfigurasi.'; return; }
+  const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  $('authError').textContent = error? ('Gagal: '+error.message) : ('Link reset dikirim ke '+email+'. Cek email (termasuk folder spam).');
+}
+function setNewPassword(){
+  showPrompt('Setel Password Baru','Masukkan password baru (minimal 6 karakter):','password baru','',async p=>{
+    if(!p) return;
+    if(p.length<6){ toast('Password minimal 6 karakter.','error'); return; }
+    const {error}=await db.auth.updateUser({password:p});
+    toast(error? ('Gagal: '+error.message) : 'Password berhasil diperbarui. Silakan login dengan password baru.', error?'error':'success');
+  });
+}
+function maybeWizard(){ if(isOwner() && (!BRAND.name || BRAND.name==='RepairLog')){ $('wzName').value=''; $('wzLogo').value=''; $('wzColor').value=BRAND.color||'#4f46e5'; openModal('wizardModal'); } }
+function closeWizard(){ closeModal('wizardModal'); }
+async function saveWizard(){ const name=$('wzName').value.trim(); if(!name){ toast('Isi nama toko dulu, atau klik "Nanti saja".','error'); return; } await saveBrand({name, logo:$('wzLogo').value.trim()||'🛠️', color:$('wzColor').value||'#4f46e5'}); closeWizard(); }
+
+// ====== MODAL SYSTEM (auto-close modal lain, klik luar = tutup, tombol back HP) ======
+let _modalHist=false;
+function anyModalOpen(){ return !!document.querySelector('.modal-bg.open'); }
+function openModal(id){ document.querySelectorAll('.modal-bg.open').forEach(m=>{ if(m.id!==id) m.classList.remove('open'); }); const el=document.getElementById(id); if(el) el.classList.add('open'); if(!_modalHist){ try{ history.pushState({rlModal:1},''); }catch(e){} _modalHist=true; } }
+function closeModal(id){ const el=document.getElementById(id); if(el) el.classList.remove('open'); if(_modalHist && !anyModalOpen()){ _modalHist=false; try{ history.back(); }catch(e){} } }
+function closeAllModals(){ const was=anyModalOpen(); document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); if(was && _modalHist){ _modalHist=false; try{ history.back(); }catch(e){} } }
+window.addEventListener('popstate',()=>{ if($('formModal').classList.contains('open') && formDirty){ try{ history.pushState({rlModal:1},''); }catch(e){} requestCloseModal('formModal'); return; } if(anyModalOpen()){ document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); _modalHist=false; } });
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) requestCloseModal(bg.id); }));
+
+// ====== TOAST (notifikasi ringan pengganti alert) ======
+function toast(msg,type){ let c=document.getElementById('toastWrap'); if(!c){ c=document.createElement('div'); c.id='toastWrap'; c.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:800;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none'; document.body.appendChild(c); } const t=document.createElement('div'); t.textContent=msg; t.style.cssText='background:'+(type==='error'?'#dc2626':type==='success'?'#16a34a':'#1f2937')+';color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:88vw;text-align:center;opacity:0;transition:opacity .2s'; c.appendChild(t); requestAnimationFrame(function(){ t.style.opacity='1'; }); setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); },250); },2600); }
+// ====== PROMPT MODAL (pengganti prompt bawaan) ======
+let _promptCb=null;
+function showPrompt(title,msg,placeholder,def,cb){ let bg=document.getElementById('promptModal'); if(!bg){ bg=document.createElement('div'); bg.className='modal-bg'; bg.id='promptModal'; bg.style.zIndex='170'; bg.innerHTML='<div class="modal" style="max-width:380px"><h2 id="promptTitle" style="font-size:18px"></h2><p class="muted" id="promptMsg" style="margin:8px 0 4px;font-size:14px"></p><input id="promptInput" onkeydown="if(event.key===\'Enter\')promptOk()" style="margin-top:4px" /><div class="actions" style="justify-content:flex-end;margin-top:18px"><button class="btn secondary small" onclick="closeModal(\'promptModal\')">Batal</button><button class="btn small" onclick="promptOk()">OK</button></div></div>'; document.body.appendChild(bg); bg.addEventListener('click',function(e){ if(e.target===bg) closeModal('promptModal'); }); } $('promptTitle').textContent=title||''; $('promptMsg').textContent=msg||''; const inp=$('promptInput'); inp.placeholder=placeholder||''; inp.value=def||''; _promptCb=cb; openModal('promptModal'); setTimeout(function(){ inp.focus(); },60); }
+function promptOk(){ const inp=$('promptInput'); const v=inp?inp.value:''; const cb=_promptCb; _promptCb=null; closeModal('promptModal'); if(typeof cb==='function') cb(v); }
+async function saveMyName(){ const n=($('setName')&&$('setName').value||'').trim(); if(!n){ toast('Nama tidak boleh kosong.','error'); return; } if(!db||!ME.user_id){ toast('Belum siap.','error'); return; } const {error}=await db.from('profiles').update({name:n}).eq('user_id',ME.user_id); if(error){ toast('Gagal menyimpan nama: '+error.message,'error'); return; } ME.name=n; await loadTeam(); if(_openReportId) renderComments(_openReportId); render(); toast('Nama tampilan diperbarui.','success'); }
+// ====== GUARD PERUBAHAN BELUM DISIMPAN + MINI MODAL ======
+let formDirty=false;
+document.getElementById('formModal').addEventListener('input',()=>{ if($('formModal').classList.contains('open')) formDirty=true; });
+document.getElementById('formModal').addEventListener('change',()=>{ if($('formModal').classList.contains('open')) formDirty=true; });
+function showMini(title,msg,buttons){ $('miniTitle').textContent=title||''; $('miniMsg').textContent=msg||''; const box=$('miniActions'); box.innerHTML=''; (buttons||[]).forEach(b=>{ const btn=document.createElement('button'); btn.className='btn small'+(b.cls?' '+b.cls:''); btn.textContent=b.label; btn.onclick=()=>{ hideMini(); if(typeof b.fn==='function') b.fn(); }; box.appendChild(btn); }); $('miniModal').classList.add('open'); }
+function hideMini(){ $('miniModal').classList.remove('open'); }
+function requestCloseModal(id){ if(id==='miniModal'){ hideMini(); return; } if(id==='formModal' && formDirty){ showMini('Perubahan belum disimpan','Ada perubahan yang belum disimpan. Simpan dulu atau buang perubahan?',[{label:'Batal',cls:'secondary',fn:null},{label:'Buang',cls:'danger',fn:()=>{ formDirty=false; closeModal('formModal'); }},{label:'💾 Simpan',fn:()=>saveReport()}]); return; } closeModal(id); }
+
+// ====== TUTORIAL (guided tour) ======
+const TOUR_KEY='rl_tour_done';
+const TOUR_STEPS=[{sel:'#navDash',title:'Dashboard',text:'Ringkasan jumlah servis, pendapatan, dan grafik performa toko.'},{sel:'#navList',title:'Laporan',text:'Daftar semua pekerjaan servis. Bisa dicari & difilter per level, status, dan merek.'},{sel:'#navBoard',title:'Papan',text:'Papan Kanban: seret kartu antar tahap (Antri → Dikerjakan → Menunggu Part → Selesai → Diambil).'},{sel:'#notifBtn',title:'Notifikasi',text:'Titik merah muncul saat ada komentar baru pada laporan yang belum kamu baca.'},{sel:'nav .btn.small',title:'Tambah Servis',text:'Klik untuk mencatat servis baru: data device, customer, foto before/after, biaya, dll.'},{sel:'#settingsBtn',title:'Pengaturan',text:'Login sidik jari, dan (khusus Owner) Pengaturan Owner: branding toko, fitur aktif, kelola pengguna, export data & PIN.'},{sel:'#navFinance',title:'Keuangan',text:'Khusus Owner: rekap pendapatan, modal, dan laba per bulan.'}];
+let tourIdx=0;
+function startTour(){ tourIdx=0; $('tourOverlay').classList.add('open'); showTourStep(); }
+function showTourStep(){
+  while(tourIdx<TOUR_STEPS.length){ const e=document.querySelector(TOUR_STEPS[tourIdx].sel); if(e&&e.offsetParent!==null) break; tourIdx++; }
+  if(tourIdx>=TOUR_STEPS.length){ endTour(); return; }
+  const s=TOUR_STEPS[tourIdx]; const el=document.querySelector(s.sel); const rc=el.getBoundingClientRect();
+  const spot=$('tourSpot'); spot.style.top=(rc.top-6)+'px'; spot.style.left=(rc.left-6)+'px'; spot.style.width=(rc.width+12)+'px'; spot.style.height=(rc.height+12)+'px';
+  $('tourTitle').textContent=s.title; $('tourText').textContent=s.text; $('tourStep').textContent=(tourIdx+1)+' / '+TOUR_STEPS.length; $('tourNext').textContent=(tourIdx>=TOUR_STEPS.length-1)?'Selesai':'Lanjut →';
+  const tip=$('tourTip'); const tw=Math.min(280,window.innerWidth-24); let tl=rc.left; if(tl+tw>window.innerWidth-12) tl=window.innerWidth-12-tw; if(tl<12) tl=12; let tt=rc.bottom+14; if(tt+170>window.innerHeight) tt=Math.max(12,rc.top-176); tip.style.left=tl+'px'; tip.style.top=tt+'px';
+}
+function nextTour(){ tourIdx++; showTourStep(); }
+function endTour(){ $('tourOverlay').classList.remove('open'); try{ localStorage.setItem(TOUR_KEY,'1'); }catch(e){} }
+function maybeTour(){ try{ if(localStorage.getItem(TOUR_KEY)) return; }catch(e){} setTimeout(()=>{ if(!anyModalOpen()) startTour(); },700); }
+function buildBrandFilter(){ const el=$('filterBrand'); if(el) el.innerHTML='<option value="">Semua Merek</option>'+BRANDS.map(b=>`<option>${esc(b)}</option>`).join(''); }
+window.addEventListener('resize',()=>{ if($('tourOverlay')&&$('tourOverlay').classList.contains('open')) showTourStep(); });
+
+// ====== LISENSI / KILL SWITCH (master control panel) ======
+function lockScreen(judul,pesan){ document.body.innerHTML='<div style="padding:48px;text-align:center;font-family:sans-serif"><h2>'+judul+'</h2><p>'+pesan+'</p></div>'; }
+async function checkLicense(){
+  if(!MASTER_URL||!MASTER_KEY||!STORE_ID) return true; // lisensi tidak dikonfigurasi → jangan kunci (versi Pro penuh)
+  try{
+    const lic=supabase.createClient(MASTER_URL,MASTER_KEY);
+    const {data}=await lic.rpc('get_license',{p_slug:STORE_ID});
+    const row=Array.isArray(data)?data[0]:data;
+    if(!row) return true; // toko belum terdaftar di master → jangan kunci
+    if(row.status==='suspended'){ lockScreen('🔒 Layanan dinonaktifkan sementara','Silakan hubungi penyedia layanan untuk mengaktifkan kembali.'); return false; }
+    if(row.due_date){ const habis=new Date(row.due_date); habis.setHours(23,59,59,999); if(new Date()>habis){ lockScreen('⏳ Masa aktif telah berakhir',(row.status==='trial'?'Masa uji coba (trial) sudah habis. ':'Masa langganan sudah berakhir. ')+'Silakan lakukan pembayaran untuk melanjutkan.'); return false; } }
+    if(row.features){ LICENSE_FEATURES=row.features; Object.keys(FEATURES).forEach(k=>{ if(LICENSE_FEATURES[k]===false) FEATURES[k]=false; }); }
+    if(row.storage_limit_mb!=null) LICENSE_STORAGE_MB=Number(row.storage_limit_mb);
+    return true;
+  }catch(e){ return true; } // gagal cek (offline dll) → biarkan toko tetap jalan
+}
+
+// ====== BOOT ======
+buildCompChecks(); buildBrandFilter(); applyBrand(); applyFeatures();
+async function boot(){
+  await fetchConfig();
+  if(!(await checkLicense())) return; // toko disuspend / trial habis → layar terkunci
+  if(handleRoute()) return;
+  if(!db){ showAuth(true); togglePwFormForce(); return; }
+  const {data:{session}}=await db.auth.getSession();
+  if(session){ await afterLogin(); }
+  else{ authReady=true; let le=''; try{ le=localStorage.getItem('rl_last_email')||''; }catch(e){} if(le&&$('authEmail')) $('authEmail').value=le; showAuth(true); if(bioEnabled()){ $('authSub').textContent='Tap sidik jari untuk masuk'; } else { togglePwFormForce(); if(le&&$('authPass')) $('authPass').focus(); } }
+}
+boot();
+</script>
+</body>
+</html>
